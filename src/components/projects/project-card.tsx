@@ -6,6 +6,7 @@ import { WORKFLOW_STEPS } from "./workflow-steps";
 
 export function ProjectCard({ project }: { project: ProjectSummary }) {
   const current = WORKFLOW_STEPS[project.currentStep - 1];
+  const isCompleted = project.status === "completed";
   const formattedDate = new Intl.DateTimeFormat("es-CL", {
     day: "2-digit",
     month: "short",
@@ -16,21 +17,24 @@ export function ProjectCard({ project }: { project: ProjectSummary }) {
     <article className="project-card">
       <div className="project-card__meta">
         <span>Ciclo {String(project.cycle).padStart(2, "0")}</span>
-        <Badge tone={project.status === "active" ? "active" : "neutral"}>
-          {project.status === "active" ? "En curso" : "Completado"}
+        <Badge tone={isCompleted ? "neutral" : "active"}>
+          {isCompleted ? "Completado" : "En curso"}
         </Badge>
       </div>
       <div className="project-card__body">
         <div>
-          <p className="project-card__step">Próximo prompt · {current.shortName}</p>
+          <p className="project-card__step">
+            {isCompleted ? "Flujo completado" : "Próximo prompt"} · {current.shortName}
+          </p>
           <h2><Link href={`/projects/${project.id}`}>{project.name}</Link></h2>
+          {isCompleted ? <p className="project-card__completion">Checklist finalizado</p> : null}
           <p className="project-card__description">{project.description || "Sin descripción operativa."}</p>
         </div>
         <span className="project-card__number" aria-hidden="true">{String(project.currentStep).padStart(2, "0")}</span>
       </div>
       <ol className="pulse-route" aria-label={`Progreso: etapa ${project.currentStep} de 8`}>
         {WORKFLOW_STEPS.map(({ step, name, shortName }) => {
-          const state = project.status === "completed" || step < project.currentStep
+          const state = isCompleted || step < project.currentStep
             ? "complete"
             : step === project.currentStep
               ? "active"
@@ -46,7 +50,9 @@ export function ProjectCard({ project }: { project: ProjectSummary }) {
       </ol>
       <footer className="project-card__footer">
         <span>Actualizado {formattedDate}</span>
-        <Link aria-label={`Abrir proyecto ${project.name}`} href={`/projects/${project.id}`}>Abrir flujo <span aria-hidden="true">→</span></Link>
+        <Link aria-label={`Abrir proyecto ${project.name}`} href={`/projects/${project.id}`}>
+          {isCompleted ? "Ver historial" : "Abrir flujo"} <span aria-hidden="true">→</span>
+        </Link>
       </footer>
     </article>
   );
