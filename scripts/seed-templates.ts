@@ -2,10 +2,15 @@ import { readdir, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
-import { ObjectId } from "mongodb";
+import { ObjectId, type ClientSession } from "mongodb";
 
 import { extractVariables } from "../src/lib/domain/template";
 import type { Step } from "../src/lib/domain/types";
+import type {
+  RecommendedAgent,
+  TemplateDocument,
+  TemplateVersionDocument,
+} from "../src/lib/db/models";
 
 const TEMPLATE_FILENAME = /^(0[1-8])-[^/]+\.md$/;
 
@@ -13,9 +18,34 @@ export interface SeedTemplate {
   step: Step;
   filename: string;
   name: string;
-  recommendedAgent: "codex" | "claude" | "antigravity" | "manual";
+  recommendedAgent: RecommendedAgent;
   content: string;
   variables: string[];
+}
+
+export interface SeedTransactionSession {
+  withTransaction<T>(callback: () => Promise<T>): Promise<T>;
+}
+
+export interface SeedTransactionClient {
+  withSession<T>(
+    callback: (session: SeedTransactionSession) => Promise<T>,
+  ): Promise<T>;
+}
+
+export interface SeedPersistence {
+  findTemplate(
+    step: Step,
+    session: SeedTransactionSession,
+  ): Promise<TemplateDocument | null>;
+  insertTemplate(
+    document: TemplateDocument,
+    session: SeedTransactionSession,
+  ): Promise<void>;
+  upsertVersionOne(
+    document: TemplateVersionDocument,
+    session: SeedTransactionSession,
+  ): Promise<void>;
 }
 
 export async function readSeedTemplates(rootDir: string): Promise<SeedTemplate[]> {
@@ -65,47 +95,87 @@ export async function seedTemplates(rootDir: string): Promise<void> {
     );
   }
 
-  const [{ collections }, { ensureIndexes }] = await Promise.all([
-    import("../src/lib/db/collections"),
-    import("../src/lib/db/indexes"),
-  ]);
+  const [{ collections }, { ensureIndexes }, { getMongoClient }] =
+    await Promise.all([
+      import("../src/lib/db/collections"),
+      import("../src/lib/db/indexes"),
+      import("../src/lib/db/client"),
+    ]);
 
   await ensureIndexes();
   const { templates, templateVersions } = await collections();
-
-  for (const seedTemplate of seedTemplates) {
-    const templateId = new ObjectId();
-    const now = new Date();
-    const result = await templates.updateOne(
-      { step: seedTemplate.step },
-      {
-        $setOnInsert: {
-          _id: templateId,
-          step: seedTemplate.step,
-          name: seedTemplate.name,
-          recommendedAgent: seedTemplate.recommendedAgent,
-          currentVersion: 1,
-          currentContent: seedTemplate.content,
-          variables: seedTemplate.variables,
-          updatedAt: now,
-        },
-      },
-      { upsert: true },
-    );
-
-    if (result.upsertedId) {
-      await templateVersions.insertOne({
-        _id: new ObjectId(),
-        templateId,
-        version: 1,
-        content: seedTemplate.content,
-        variables: seedTemplate.variables,
-        createdAt: now,
+  const client = await getMongoClient();
+  const persistence: SeedPersistence = {
+    async findTemplate(step, session) {
+      return templates.findOne(
+        { step },
+        { session: session as ClientSession },
+      );
+    },
+    async insertTemplate(document, session) {
+      await templates.insertOne(document, {
+        session: session as ClientSession,
       });
-    }
-  }
+    },
+    async upsertVersionOne(document, session) {
+      await templateVersions.updateOne(
+        { templateId: document.templateId, version: 1 },
+        { $setOnInsert: document },
+        { upsert: true, session: session as ClientSession },
+      );
+    },
+  };
+
+  await persistSeedTemplates(seedTemplates, client, persistence);
 
   console.log(`${seedTemplates.length} plantillas disponibles`);
+}
+
+export async function persistSeedTemplates(
+  seedTemplates: readonly SeedTemplate[],
+  client: SeedTransactionClient,
+  persistence: SeedPersistence,
+): Promise<void> {
+  for (const seedTemplate of seedTemplates) {
+    await client.withSession(async (session) => {
+      await session.withTransaction(async () => {
+        const existingTemplate = await persistence.findTemplate(
+          seedTemplate.step,
+          session,
+        );
+        const templateId = existingTemplate?._id ?? new ObjectId();
+        const now = new Date();
+
+        if (!existingTemplate) {
+          await persistence.insertTemplate(
+            {
+              _id: templateId,
+              step: seedTemplate.step,
+              name: seedTemplate.name,
+              recommendedAgent: seedTemplate.recommendedAgent,
+              currentVersion: 1,
+              currentContent: seedTemplate.content,
+              variables: seedTemplate.variables,
+              updatedAt: now,
+            },
+            session,
+          );
+        }
+
+        await persistence.upsertVersionOne(
+          {
+            _id: new ObjectId(),
+            templateId,
+            version: 1,
+            content: seedTemplate.content,
+            variables: seedTemplate.variables,
+            createdAt: now,
+          },
+          session,
+        );
+      });
+    });
+  }
 }
 
 function recommendedAgent(

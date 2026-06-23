@@ -2,9 +2,15 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
+import { ObjectId } from "mongodb";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { readSeedTemplates } from "./seed-templates";
+import type {
+  SeedPersistence,
+  SeedTransactionClient,
+  SeedTransactionSession,
+} from "./seed-templates";
+import { persistSeedTemplates, readSeedTemplates } from "./seed-templates";
 
 const temporaryDirectories: string[] = [];
 
@@ -109,5 +115,105 @@ describe("readSeedTemplates", () => {
     await expect(readSeedTemplates(rootDir)).rejects.toThrow(
       "Paso duplicado 1: 01-first.md, 01-other.md",
     );
+  });
+});
+
+describe("persistSeedTemplates", () => {
+  const seedTemplate = {
+    step: 1 as const,
+    filename: "01-first-codex.md",
+    name: "First prompt",
+    recommendedAgent: "codex" as const,
+    content: "# First prompt\nBuild {{FEATURE}}",
+    variables: ["FEATURE"],
+  };
+
+  it("creates a new template and version 1 in one session transaction", async () => {
+    const calls: string[] = [];
+    const session: SeedTransactionSession = {
+      async withTransaction(callback) {
+        calls.push("transaction");
+        return callback();
+      },
+    };
+    const client: SeedTransactionClient = {
+      async withSession(callback) {
+        calls.push("session");
+        return callback(session);
+      },
+    };
+    const persistence: SeedPersistence = {
+      async findTemplate(_step, operationSession) {
+        expect(operationSession).toBe(session);
+        calls.push("find-template");
+        return null;
+      },
+      async insertTemplate(document, operationSession) {
+        expect(operationSession).toBe(session);
+        expect(document.currentContent).toBe(seedTemplate.content);
+        calls.push("insert-template");
+      },
+      async upsertVersionOne(document, operationSession) {
+        expect(operationSession).toBe(session);
+        expect(document.content).toBe(seedTemplate.content);
+        calls.push("upsert-version");
+      },
+    };
+
+    await persistSeedTemplates([seedTemplate], client, persistence);
+
+    expect(calls).toEqual([
+      "session",
+      "transaction",
+      "find-template",
+      "insert-template",
+      "upsert-version",
+    ]);
+  });
+
+  it("repairs a missing version 1 without changing an existing template", async () => {
+    const existingTemplate = {
+      _id: new ObjectId(),
+      step: 1 as const,
+      name: "Edited name",
+      recommendedAgent: "manual",
+      currentVersion: 3,
+      currentContent: "Edited content",
+      variables: ["EDITED"],
+      updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+    };
+    let insertedTemplate = false;
+    let repairedVersionContent: string | undefined;
+    const session: SeedTransactionSession = {
+      async withTransaction(callback) {
+        return callback();
+      },
+    };
+    const client: SeedTransactionClient = {
+      async withSession(callback) {
+        return callback(session);
+      },
+    };
+    const persistence: SeedPersistence = {
+      async findTemplate() {
+        return existingTemplate;
+      },
+      async insertTemplate() {
+        insertedTemplate = true;
+      },
+      async upsertVersionOne(document) {
+        repairedVersionContent = document.content;
+      },
+    };
+
+    await persistSeedTemplates([seedTemplate], client, persistence);
+
+    expect(insertedTemplate).toBe(false);
+    expect(repairedVersionContent).toBe(seedTemplate.content);
+    expect(existingTemplate).toMatchObject({
+      currentContent: "Edited content",
+      currentVersion: 3,
+      variables: ["EDITED"],
+    });
   });
 });

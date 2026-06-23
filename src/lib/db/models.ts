@@ -2,6 +2,12 @@ import type { ObjectId } from "mongodb";
 
 import type { Step } from "@/lib/domain/types";
 
+export type RecommendedAgent =
+  | "codex"
+  | "claude"
+  | "antigravity"
+  | "manual";
+
 export interface ProjectDocument {
   _id: ObjectId;
   name: string;
@@ -38,7 +44,7 @@ export interface TemplateDocument {
   _id: ObjectId;
   step: Step;
   name: string;
-  recommendedAgent: string;
+  recommendedAgent: RecommendedAgent;
   currentVersion: number;
   currentContent: string;
   variables: string[];
