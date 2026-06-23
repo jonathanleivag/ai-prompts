@@ -12,13 +12,15 @@ El proceso sigue una secuencia lógica de 8 pasos, desde la concepción de la id
 
 ```mermaid
 graph TD
-    01[01. Análisis de Requerimientos] --> 02[02. Análisis Técnico de Impacto]
-    02 --> 03[03. Diseño UX/UI]
-    03 --> 04[04. Implementación de Código]
-    04 --> 05[05. Code Review]
-    05 --> 06[06. Testing Funcional & QA]
-    06 --> 07[07. Release Notes]
-    07 --> 08[08. Checklist de Producción]
+    01["01. Análisis de Requerimientos"] --> 02["02. Análisis Técnico de Impacto"]
+    02 --> 03["03. Diseño UX/UI"]
+    03 --> 04["04. Implementación de Código"]
+    04 --> 05["05. Code Review"]
+    05 -->|Aprobado| 06["06. Testing Funcional & QA"]
+    05 -->|Requiere cambios| 04
+    06 -->|Exitoso| 07["07. Release Notes"]
+    06 -->|Fallas / Bugs| 04
+    07 --> 08["08. Checklist de Producción"]
 ```
 
 ---
@@ -51,11 +53,13 @@ A continuación se describen las plantillas disponibles en este repositorio:
 * **Rol:** Tech Lead Senior.
 * **Objetivo:** Realizar una revisión exhaustiva del código implementado en búsqueda de mejoras y riesgos.
 * **Entregables:** Detección de bugs, problemas de rendimiento/seguridad, violaciones de principios SOLID y veredicto final (aprobación o solicitud de cambios).
+* **Feedback Loop:** Si la revisión requiere cambios o encuentra observaciones, se debe **volver al paso 4** (Implementación) para corregirlos antes de proceder al testeo funcional.
 
 ### 6. [06-testing-antigravity.md](./06-testing-antigravity.md)
 * **Rol:** QA Senior.
 * **Objetivo:** Validar funcionalmente los cambios mediante pruebas integrales.
 * **Entregables:** Pruebas del camino feliz (happy path), casos negativos, comportamiento responsive, severidad de fallos y recomendación final.
+* **Feedback Loop:** Si alguna prueba funcional falla o se descubren bugs, se debe **volver al paso 4** (Implementación) y repetir el ciclo hasta que todas las pruebas pasen exitosamente.
 
 ### 7. [07-release-notes.md](./07-release-notes.md)
 * **Rol:** Release Manager Senior.
