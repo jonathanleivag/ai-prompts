@@ -38,3 +38,5 @@ Genera:
 ### Plan Técnico Inicial
 
 y con toda esa información quiero que en base a esto me generes un plan de trabajo para implementar el requerimiento y guardarlo en un archivo .md en {{OUTPUT_PATH}}
+
+PD: Utiliza los agentes y skills que sean necesarios

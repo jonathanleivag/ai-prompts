@@ -60,3 +60,5 @@ Fecha: dd-mm-yyyy
 ## Recomendaciones
 
 con toda esa información quiero que en base a esto me generes un release-notes-ddmmyyyy.md en el directorio {{OUTPUT_PATH}}
+
+PD: Utiliza los agentes y skills que sean necesarios

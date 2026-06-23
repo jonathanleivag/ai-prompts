@@ -34,3 +34,5 @@ Analiza el proyecto actual SIN modificar archivos.
 ### Plan de Implementación
 
 y con toda esa información quiero que en base a esto me generes un analisis del proyecto y guardarlo en un archivo .md en {{OUTPUT_PATH}}
+
+PD: Utiliza los agentes y skills que sean necesarios
