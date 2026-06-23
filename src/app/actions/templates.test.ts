@@ -1,0 +1,54 @@
+import { beforeEach, describe, expect, test, vi } from "vitest";
+
+const repository = vi.hoisted(() => ({
+  saveTemplateVersion: vi.fn(),
+  restoreTemplateVersion: vi.fn(),
+}));
+const next = vi.hoisted(() => ({ revalidatePath: vi.fn() }));
+
+vi.mock("@/lib/data/templates", () => repository);
+vi.mock("next/cache", () => ({ revalidatePath: next.revalidatePath }));
+
+import { restoreTemplateAction, saveTemplateAction } from "./templates";
+
+const id = "507f1f77bcf86cd799439011";
+const formData = (values: Record<string, string>) => {
+  const data = new FormData();
+  Object.entries(values).forEach(([key, value]) => data.set(key, value));
+  return data;
+};
+
+beforeEach(() => vi.clearAllMocks());
+
+describe("saveTemplateAction", () => {
+  test("rejects content with an invalid marker", async () => {
+    const result = await saveTemplateAction(
+      formData({ templateId: id, content: "Hola {{invalid}}" }),
+    );
+
+    expect(result).toMatchObject({ ok: false, fieldErrors: { content: expect.any(Array) } });
+    expect(repository.saveTemplateVersion).not.toHaveBeenCalled();
+  });
+
+  test("saves valid content and revalidates its template path", async () => {
+    const saved = { templateId: id, version: 2, content: "Hola {{NAME}}", variables: ["NAME"] };
+    repository.saveTemplateVersion.mockResolvedValue(saved);
+
+    const result = await saveTemplateAction(
+      formData({ templateId: id, content: "Hola {{NAME}}" }),
+    );
+
+    expect(result).toEqual({ ok: true, data: saved });
+    expect(next.revalidatePath).toHaveBeenCalledWith(`/templates/${id}`);
+  });
+});
+
+test("restoreTemplateAction rejects invalid ids and versions", async () => {
+  const result = await restoreTemplateAction({ templateId: "bad", version: 0 });
+
+  expect(result).toMatchObject({
+    ok: false,
+    fieldErrors: { templateId: expect.any(Array), version: expect.any(Array) },
+  });
+  expect(repository.restoreTemplateVersion).not.toHaveBeenCalled();
+});
