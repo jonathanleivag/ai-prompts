@@ -54,6 +54,20 @@ describe("createProjectAction", () => {
     expect(result).toMatchObject({ ok: false, fieldErrors: { initialStep: expect.any(Array) } });
   });
 
+  test("rejects a boolean initial step", async () => {
+    repository.createProject.mockResolvedValue({ id, currentStep: 1, cycle: 1, status: "active" });
+    const hostileInput = new Map<string, unknown>([
+      ["name", "Proyecto"],
+      ["description", "desc"],
+      ["initialStep", true],
+    ]) as unknown as FormData;
+
+    const result = await createProjectAction(hostileInput);
+
+    expect(result).toMatchObject({ ok: false, fieldErrors: { initialStep: expect.any(Array) } });
+    expect(repository.createProject).not.toHaveBeenCalled();
+  });
+
   test("revalidates and redirects only after a successful creation", async () => {
     repository.createProject.mockResolvedValue({ id, currentStep: 1, cycle: 1, status: "active" });
 
@@ -93,6 +107,23 @@ test("generatePromptAction rejects variables that do not match the template", as
   expect(result).toMatchObject({ ok: false, fieldErrors: { variables: expect.any(Array) } });
 });
 
+test("generatePromptAction rejects boolean workflow numbers", async () => {
+  repository.generateStepPrompt.mockResolvedValue({ prompt: "ok" });
+
+  const result = await generatePromptAction({
+    projectId: id,
+    currentStep: true,
+    cycle: true,
+    variables: {},
+  });
+
+  expect(result).toMatchObject({
+    ok: false,
+    fieldErrors: { currentStep: expect.any(Array), cycle: expect.any(Array) },
+  });
+  expect(repository.generateStepPrompt).not.toHaveBeenCalled();
+});
+
 test("reviewDecisionAction rejects an unknown decision", async () => {
   const result = await reviewDecisionAction({
     projectId: id,
@@ -114,6 +145,32 @@ test("completeStepAction translates WorkflowConflictError into a recoverable res
     ok: false,
     message: "El workflow cambió; recarga el proyecto e inténtalo de nuevo",
   });
+});
+
+test("completeStepAction rejects boolean workflow numbers", async () => {
+  repository.completeStep.mockResolvedValue({ id, currentStep: 2, cycle: 1, status: "active" });
+
+  const result = await completeStepAction({ projectId: id, currentStep: true, cycle: true });
+
+  expect(result).toMatchObject({
+    ok: false,
+    fieldErrors: { currentStep: expect.any(Array), cycle: expect.any(Array) },
+  });
+  expect(repository.completeStep).not.toHaveBeenCalled();
+});
+
+test("reviewDecisionAction rejects a boolean cycle", async () => {
+  repository.decideReview.mockResolvedValue({ id, currentStep: 6, cycle: 1, status: "active" });
+
+  const result = await reviewDecisionAction({
+    projectId: id,
+    currentStep: 5,
+    cycle: true,
+    decision: "approve",
+  });
+
+  expect(result).toMatchObject({ ok: false, fieldErrors: { cycle: expect.any(Array) } });
+  expect(repository.decideReview).not.toHaveBeenCalled();
 });
 
 test("workflow actions reject invalid project ids", async () => {

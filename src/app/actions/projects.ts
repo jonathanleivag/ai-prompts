@@ -12,8 +12,9 @@ import {
   generateStepPrompt,
 } from "@/lib/data/projects";
 import { actionFailure, type ActionResult, validationFailure } from "@/lib/actions/state";
+import { strictInteger } from "@/lib/actions/schema";
 
-const stepSchema = z.coerce.number().pipe(
+const stepSchema = strictInteger("La etapa debe estar entre 1 y 8").pipe(
   z.union([
     z.literal(1),
     z.literal(2),
@@ -29,7 +30,9 @@ const objectIdSchema = z.string().regex(/^[a-f\d]{24}$/i, "ID inválido");
 const workflowStateSchema = z.object({
   projectId: objectIdSchema,
   currentStep: stepSchema,
-  cycle: z.coerce.number().int().positive("El ciclo debe ser mayor que cero"),
+  cycle: strictInteger("El ciclo debe ser un número entero").pipe(
+    z.number().positive("El ciclo debe ser mayor que cero"),
+  ),
 });
 const createProjectSchema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio"),
@@ -43,7 +46,9 @@ const generatePromptSchema = workflowStateSchema.extend({
   ),
 });
 const reviewDecisionSchema = workflowStateSchema.extend({
-  currentStep: z.union([z.literal(5), z.literal(6)]),
+  currentStep: stepSchema.pipe(
+    z.union([z.literal(5), z.literal(6)], { message: "La etapa debe ser review o testing" }),
+  ),
   decision: z.enum(["approve", "request_changes"], { message: "Decisión inválida" }),
 });
 

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { actionFailure, type ActionResult, validationFailure } from "@/lib/actions/state";
+import { strictInteger } from "@/lib/actions/schema";
 import { restoreTemplateVersion, saveTemplateVersion } from "@/lib/data/templates";
 import { validateTemplate } from "@/lib/domain/template";
 
@@ -21,7 +22,9 @@ const contentSchema = z.string().trim().min(1, "El contenido es obligatorio").su
 const saveTemplateSchema = z.object({ templateId: objectIdSchema, content: contentSchema });
 const restoreTemplateSchema = z.object({
   templateId: objectIdSchema,
-  version: z.coerce.number().int().positive("La versión debe ser mayor que cero"),
+  version: strictInteger("La versión debe ser un número entero").pipe(
+    z.number().positive("La versión debe ser mayor que cero"),
+  ),
 });
 
 type RestoreTemplateInput = z.input<typeof restoreTemplateSchema>;
