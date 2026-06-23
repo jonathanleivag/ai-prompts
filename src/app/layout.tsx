@@ -15,11 +15,13 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <header className="site-header">
           <nav aria-label="Navegación principal" className="site-nav">
             <Link className="brand" href="/">
-              AI Prompt Workflow
+              <span className="brand__mark" aria-hidden="true">AP</span>
+              <span>Prompt Pipeline</span>
             </Link>
             <div className="nav-links">
               <Link href="/">Proyectos</Link>
               <Link href="/templates">Plantillas</Link>
+              <span className="nav-status"><i aria-hidden="true" /> Sistema listo</span>
             </div>
           </nav>
         </header>
