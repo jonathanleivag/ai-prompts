@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build --webpack",
+    "db:seed": "NODE_OPTIONS=--conditions=react-server tsx scripts/seed-templates.ts",
     "lint": "eslint .",
     "test": "vitest",
     "test:run": "vitest run",
@@ -30,6 +31,7 @@
     "eslint-config-next": "^16.0.0",
     "jsdom": "^27.0.0",
     "tailwindcss": "^4.0.0",
+    "tsx": "^4.22.4",
     "typescript": "^5.9.0",
     "vitest": "^4.0.0"
   }
