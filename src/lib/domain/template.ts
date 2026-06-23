@@ -1,11 +1,16 @@
-const VALID_MARKER = /^\{\{([A-Z][A-Z0-9_]*)\}\}$/;
-const ANY_MARKER = /\{\{[^{}]*\}\}/g;
+const VALID_MARKER_AT_START = /^\{\{([A-Z][A-Z0-9_]*)\}\}/;
 const VARIABLE = /\{\{([A-Z][A-Z0-9_]*)\}\}/g;
 
 export function validateTemplate(content: string): void {
-  for (const marker of content.match(ANY_MARKER) ?? []) {
-    if (!VALID_MARKER.test(marker)) {
-      throw new Error(`Marcador inválido: ${marker}`);
+  for (let index = 0; index < content.length; index += 1) {
+    if (content.startsWith("{{", index)) {
+      const marker = content.slice(index).match(VALID_MARKER_AT_START)?.[0];
+      if (!marker || content[index + marker.length] === "}") {
+        throw new Error("Marcador inválido");
+      }
+      index += marker.length - 1;
+    } else if (content.startsWith("}}", index)) {
+      throw new Error("Marcador inválido");
     }
   }
 }
@@ -33,7 +38,7 @@ export function renderPrompt(
 ): string {
   const variables = extractVariables(content);
   const expected = new Set(variables);
-  const missing = variables.filter((variable) => !(variable in values));
+  const missing = variables.filter((variable) => !Object.hasOwn(values, variable));
   const unknown = Object.keys(values).filter((variable) => !expected.has(variable));
 
   if (missing.length > 0 || unknown.length > 0) {

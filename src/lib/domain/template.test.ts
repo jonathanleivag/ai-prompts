@@ -16,6 +16,16 @@ describe("prompt templates", () => {
     },
   );
 
+  it.each(["{{FEATURE", "{{{FEATURE}}}", "{{FEATURE}}}"])(
+    "rejects the malformed or unbalanced marker %s",
+    (content) => {
+      expect(() => validateTemplate(content)).toThrow("Marcador inválido");
+      expect(() => renderPrompt(content, { FEATURE: "Login" })).toThrow(
+        "Marcador inválido",
+      );
+    },
+  );
+
   it("replaces every occurrence of a variable", () => {
     expect(
       renderPrompt("{{FEATURE}} / {{FEATURE}}", { FEATURE: "Login" }),
@@ -29,6 +39,20 @@ describe("prompt templates", () => {
         EXTRA: "unused",
       }),
     ).toThrow(/Faltan valores: OUTPUT_PATH.*Valores desconocidos: EXTRA/);
+  });
+
+  it("treats inherited object properties as missing values", () => {
+    expect(() => renderPrompt("{{CONSTRUCTOR}}", {})).toThrow(
+      "Faltan valores: CONSTRUCTOR",
+    );
+
+    const inheritedValues = Object.create({ CONSTRUCTOR: "inherited" }) as Record<
+      string,
+      string
+    >;
+    expect(() => renderPrompt("{{CONSTRUCTOR}}", inheritedValues)).toThrow(
+      "Faltan valores: CONSTRUCTOR",
+    );
   });
 
   it("does not mutate the template or values", () => {
