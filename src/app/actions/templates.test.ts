@@ -61,3 +61,15 @@ test("restoreTemplateAction rejects a boolean version", async () => {
   expect(result).toMatchObject({ ok: false, fieldErrors: { version: expect.any(Array) } });
   expect(repository.restoreTemplateVersion).not.toHaveBeenCalled();
 });
+
+test.each([
+  ["object", {}],
+  ["null", null],
+])("restoreTemplateAction rejects an %s version", async (_, version) => {
+  repository.restoreTemplateVersion.mockResolvedValue({ templateId: id, version: 2 });
+
+  const result = await restoreTemplateAction({ templateId: id, version });
+
+  expect(result).toMatchObject({ ok: false, fieldErrors: { version: expect.any(Array) } });
+  expect(repository.restoreTemplateVersion).not.toHaveBeenCalled();
+});

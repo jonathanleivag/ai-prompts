@@ -159,6 +159,18 @@ test("completeStepAction rejects boolean workflow numbers", async () => {
   expect(repository.completeStep).not.toHaveBeenCalled();
 });
 
+test.each([
+  ["object", {}],
+  ["null", null],
+])("completeStepAction rejects an %s current step", async (_, currentStep) => {
+  repository.completeStep.mockResolvedValue({ id, currentStep: 2, cycle: 1, status: "active" });
+
+  const result = await completeStepAction({ projectId: id, currentStep, cycle: 1 });
+
+  expect(result).toMatchObject({ ok: false, fieldErrors: { currentStep: expect.any(Array) } });
+  expect(repository.completeStep).not.toHaveBeenCalled();
+});
+
 test("reviewDecisionAction rejects a boolean cycle", async () => {
   repository.decideReview.mockResolvedValue({ id, currentStep: 6, cycle: 1, status: "active" });
 
@@ -170,6 +182,20 @@ test("reviewDecisionAction rejects a boolean cycle", async () => {
   });
 
   expect(result).toMatchObject({ ok: false, fieldErrors: { cycle: expect.any(Array) } });
+  expect(repository.decideReview).not.toHaveBeenCalled();
+});
+
+test("reviewDecisionAction rejects a boolean current step", async () => {
+  repository.decideReview.mockResolvedValue({ id, currentStep: 6, cycle: 1, status: "active" });
+
+  const result = await reviewDecisionAction({
+    projectId: id,
+    currentStep: true,
+    cycle: 1,
+    decision: "approve",
+  });
+
+  expect(result).toMatchObject({ ok: false, fieldErrors: { currentStep: expect.any(Array) } });
   expect(repository.decideReview).not.toHaveBeenCalled();
 });
 
