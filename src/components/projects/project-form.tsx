@@ -16,7 +16,7 @@ interface FormState {
 }
 
 const initialState: FormState = {
-  values: { name: "", description: "", initialStep: "1" },
+  values: { name: "", description: "", initialStep: "0" },
 };
 
 export function ProjectForm({ createAction = createProjectAction }: { createAction?: CreateAction }) {
@@ -25,7 +25,7 @@ export function ProjectForm({ createAction = createProjectAction }: { createActi
       const values = {
         name: String(formData.get("name") ?? ""),
         description: String(formData.get("description") ?? ""),
-        initialStep: String(formData.get("initialStep") ?? "1"),
+        initialStep: String(formData.get("initialStep") ?? "0"),
       };
       return { result: await createAction(formData), values };
     },

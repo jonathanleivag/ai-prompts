@@ -10,7 +10,7 @@ describe("ProjectForm", () => {
 
     expect(screen.getByLabelText("Nombre del proyecto")).toBeInTheDocument();
     expect(screen.getByLabelText("Descripción")).toBeInTheDocument();
-    expect(screen.getByLabelText("Etapa inicial")).toHaveValue("1");
+    expect(screen.getByLabelText("Etapa inicial")).toHaveValue("0");
   });
 
   test("ofrece las nueve etapas reales del workflow", () => {
