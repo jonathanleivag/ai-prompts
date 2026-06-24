@@ -196,7 +196,7 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
       <div data-testid="workflow-background" inert={confirmChanges ? true : undefined}>
       <StepProgress currentStep={project.currentStep} currentCycle={project.cycle} runs={project.runs} projectStatus={project.status} />
       <header className="workflow-heading">
-        <div>
+        <div className="workflow-heading__left">
           <p className="eyebrow">Ciclo {String(project.cycle).padStart(2, "0")} / Etapa {String(project.currentStep).padStart(2, "0")}</p>
           <h1>{project.name}</h1>
           <DeleteProjectButton projectId={project.id} projectName={project.name} />
