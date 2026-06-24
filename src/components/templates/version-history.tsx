@@ -15,7 +15,7 @@ export function VersionHistory({
 }: {
   versions: TemplateVersionView[];
   disabled: boolean;
-  onRestore: (version: TemplateVersionView) => void;
+  onRestore: (version: TemplateVersionView, trigger: HTMLButtonElement) => void;
 }) {
   const ordered = [...versions].sort((left, right) => right.version - left.version);
 
@@ -33,7 +33,7 @@ export function VersionHistory({
                 <h3>Versión {entry.version}</h3>
                 <time dateTime={entry.createdAt}>{formatDate(entry.createdAt)}</time>
               </div>
-              <Button type="button" variant="quiet" disabled={disabled} onClick={() => onRestore(entry)}>
+              <Button type="button" variant="quiet" disabled={disabled} onClick={(event) => onRestore(entry, event.currentTarget)}>
                 Restaurar versión {entry.version}
               </Button>
             </div>

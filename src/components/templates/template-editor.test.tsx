@@ -31,7 +31,7 @@ const template: TemplateEditorView = {
 beforeEach(() => {
   vi.clearAllMocks();
   actions.save.mockResolvedValue({ ok: true, data: { version: 4 } });
-  actions.restore.mockResolvedValue({ ok: true, data: { version: 4 } });
+  actions.restore.mockResolvedValue({ ok: true, data: { version: 4, content: "Implementa {{LEGACY}}", variables: ["LEGACY"] } });
 });
 
 describe("TemplateEditor", () => {
@@ -120,6 +120,58 @@ describe("TemplateEditor", () => {
     expect(await screen.findByRole("status")).toHaveTextContent("Versión 4 creada desde la versión 2");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(navigation.refresh).toHaveBeenCalled();
+  });
+
+  test("sincroniza contenido, variables, preview y versión local después de restaurar", async () => {
+    render(<TemplateEditor template={template} />);
+    fireEvent.click(screen.getByRole("button", { name: "Restaurar versión 2" }));
+    fireEvent.click(screen.getByRole("button", { name: "Crear versión nueva" }));
+
+    expect(await screen.findByLabelText("Contenido de la plantilla")).toHaveValue("Implementa {{LEGACY}}");
+    expect(screen.getByTestId("template-preview")).toHaveTextContent("Implementa {{LEGACY}}");
+    const variables = screen.getByRole("list", { name: "Variables detectadas" });
+    expect(within(variables).getAllByRole("listitem")).toHaveLength(1);
+    expect(variables).toHaveTextContent("LEGACY");
+    expect(screen.getByText(/Versión 04/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Guardar nueva versión" })).toBeDisabled();
+  });
+
+  test("confina Tab y Shift+Tab dentro del modal", () => {
+    render(<TemplateEditor template={template} />);
+    fireEvent.click(screen.getByRole("button", { name: "Restaurar versión 2" }));
+    const dialog = screen.getByRole("dialog", { name: "Restaurar versión 2" });
+    const confirm = within(dialog).getByRole("button", { name: "Crear versión nueva" });
+    const cancel = within(dialog).getByRole("button", { name: "Cancelar" });
+
+    cancel.focus();
+    fireEvent.keyDown(dialog, { key: "Tab" });
+    expect(confirm).toHaveFocus();
+    confirm.focus();
+    fireEvent.keyDown(dialog, { key: "Tab", shiftKey: true });
+    expect(cancel).toHaveFocus();
+  });
+
+  test("Escape cancela y devuelve el foco al botón que abrió el modal", () => {
+    render(<TemplateEditor template={template} />);
+    const trigger = screen.getByRole("button", { name: "Restaurar versión 2" });
+    trigger.focus();
+    fireEvent.click(trigger);
+    const dialog = screen.getByRole("dialog", { name: "Restaurar versión 2" });
+
+    fireEvent.keyDown(dialog, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+
+  test("devuelve el foco al disparador después de restaurar con éxito", async () => {
+    render(<TemplateEditor template={template} />);
+    const trigger = screen.getByRole("button", { name: "Restaurar versión 2" });
+    trigger.focus();
+    fireEvent.click(trigger);
+    fireEvent.click(screen.getByRole("button", { name: "Crear versión nueva" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await waitFor(() => expect(trigger).toHaveFocus());
   });
 
   test("mantiene el modal accesible y recuperable cuando falla restaurar", async () => {

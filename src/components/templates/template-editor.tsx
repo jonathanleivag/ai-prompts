@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import { restoreTemplateAction, saveTemplateAction } from "@/app/actions/templates";
@@ -25,10 +25,13 @@ type Notice = { kind: "error" | "success"; text: string };
 export function TemplateEditor({ template }: { template: TemplateEditorView }) {
   const router = useRouter();
   const [content, setContent] = useState(template.currentContent);
+  const [savedContent, setSavedContent] = useState(template.currentContent);
+  const [currentVersion, setCurrentVersion] = useState(template.currentVersion);
   const [notice, setNotice] = useState<Notice>();
   const [restoreTarget, setRestoreTarget] = useState<TemplateVersionView>();
   const [restoreError, setRestoreError] = useState<string>();
   const [pending, startTransition] = useTransition();
+  const restoreTrigger = useRef<HTMLButtonElement | null>(null);
   const validation = useMemo(() => {
     try {
       return { variables: extractVariables(content), error: undefined };
@@ -36,8 +39,15 @@ export function TemplateEditor({ template }: { template: TemplateEditorView }) {
       return { variables: [] as string[], error: error instanceof Error ? error.message : "Contenido inválido" };
     }
   }, [content]);
-  const changed = content !== template.currentContent;
+  const changed = content !== savedContent;
   const canSave = changed && content.trim().length > 0 && !validation.error && !pending;
+
+  useEffect(() => {
+    if (!restoreTarget && !pending && restoreTrigger.current) {
+      restoreTrigger.current.focus();
+      restoreTrigger.current = null;
+    }
+  }, [pending, restoreTarget]);
 
   function save() {
     setNotice(undefined);
@@ -51,6 +61,8 @@ export function TemplateEditor({ template }: { template: TemplateEditorView }) {
         return;
       }
       const version = (result.data as { version: number }).version;
+      setSavedContent(content);
+      setCurrentVersion(version);
       setNotice({ kind: "success", text: `Versión ${version} guardada` });
       router.refresh();
     });
@@ -65,18 +77,51 @@ export function TemplateEditor({ template }: { template: TemplateEditorView }) {
         setRestoreError(result.message);
         return;
       }
-      const version = (result.data as { version: number }).version;
-      setNotice({ kind: "success", text: `Versión ${version} creada desde la versión ${restoreTarget.version}` });
+      const restored = result.data as { version: number; content: string; variables: string[] };
+      setContent(restored.content);
+      setSavedContent(restored.content);
+      setCurrentVersion(restored.version);
+      setNotice({ kind: "success", text: `Versión ${restored.version} creada desde la versión ${restoreTarget.version}` });
       setRestoreTarget(undefined);
       router.refresh();
     });
   }
 
+  function closeRestore() {
+    if (pending) return;
+    setRestoreTarget(undefined);
+    setRestoreError(undefined);
+  }
+
+  function keepModalFocus(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeRestore();
+      return;
+    }
+    if (event.key !== "Tab") return;
+    const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>("button:not(:disabled)"));
+    const first = buttons[0];
+    const last = buttons.at(-1);
+    if (!first || !last) return;
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    } else if (!event.currentTarget.contains(document.activeElement)) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
   return (
     <div className="template-workbench">
+      <div inert={restoreTarget ? true : undefined}>
       <header className="template-heading">
         <div>
-          <p className="eyebrow">Plantilla {String(template.step).padStart(2, "0")} / Versión {String(template.currentVersion).padStart(2, "0")}</p>
+          <p className="eyebrow">Plantilla {String(template.step).padStart(2, "0")} / Versión {String(currentVersion).padStart(2, "0")}</p>
           <h1>{template.name}</h1>
         </div>
         <div className="template-heading__meta">
@@ -121,18 +166,19 @@ export function TemplateEditor({ template }: { template: TemplateEditorView }) {
         </section>
       </div>
 
-      <VersionHistory versions={template.versions} disabled={pending} onRestore={(entry) => { setRestoreError(undefined); setRestoreTarget(entry); }} />
+      <VersionHistory versions={template.versions} disabled={pending} onRestore={(entry, trigger) => { restoreTrigger.current = trigger; setRestoreError(undefined); setRestoreTarget(entry); }} />
+      </div>
 
       {restoreTarget ? (
-        <div className="confirmation-backdrop" onKeyDown={(event) => { if (event.key === "Escape" && !pending) setRestoreTarget(undefined); }}>
-          <section className="confirmation" role="dialog" aria-modal="true" aria-labelledby="restore-title" aria-describedby="restore-description">
+        <div className="confirmation-backdrop">
+          <section className="confirmation" role="dialog" aria-modal="true" aria-labelledby="restore-title" aria-describedby="restore-description" onKeyDown={keepModalFocus}>
             <p className="panel-index">Confirmación requerida</p>
             <h2 id="restore-title">Restaurar versión {restoreTarget.version}</h2>
             <p id="restore-description">El contenido histórico se copiará sobre la plantilla y creará una versión nueva. El historial existente no se elimina.</p>
             {restoreError ? <p className="form-alert" role="alert" aria-live="assertive">{restoreError}</p> : null}
             <div className="form-actions">
               <Button type="button" autoFocus onClick={restore} disabled={pending}>{pending ? "Restaurando…" : "Crear versión nueva"}</Button>
-              <Button type="button" variant="quiet" onClick={() => { setRestoreTarget(undefined); setRestoreError(undefined); }} disabled={pending}>Cancelar</Button>
+              <Button type="button" variant="quiet" onClick={closeRestore} disabled={pending}>Cancelar</Button>
             </div>
           </section>
         </div>
