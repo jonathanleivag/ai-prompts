@@ -10,7 +10,7 @@ export function StepProgress({ currentStep, runs, projectStatus }: { currentStep
       <ol className="workflow-route" aria-label="Ruta del workflow">
         {WORKFLOW_STEPS.map(({ step, name, shortName }) => {
           const runStatus = statusByStep.get(step);
-          const state = projectStatus === "completed" ? "completed" : runStatus === "skipped" ? "skipped" : step === currentStep ? "current" : runStatus && runStatus !== "active" ? "completed" : "pending";
+          const state = runStatus === "skipped" ? "skipped" : projectStatus === "completed" ? "completed" : step === currentStep ? "current" : runStatus && runStatus !== "active" ? "completed" : "pending";
           const label = state === "skipped" ? "Omitida" : state === "current" ? "Actual" : state === "completed" ? "Completada" : "Pendiente";
           return (
             <li className={`workflow-route__step workflow-route__step--${state}`} key={step} aria-current={state === "current" ? "step" : undefined}>

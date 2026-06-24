@@ -51,11 +51,20 @@ describe("WorkflowWizard", () => {
     expect(within(progress).getByText(/Implementación · Actual/)).toBeInTheDocument();
   });
 
-  test("marca las ocho etapas completadas y ninguna actual cuando el proyecto terminó", () => {
-    render(<WorkflowWizard project={{ ...project, status: "completed", currentStep: 8 }} />);
+  test("preserva etapas omitidas y marca las ejecutadas completadas cuando el proyecto terminó", () => {
+    const completedRuns = Array.from({ length: 8 }, (_, index) => ({
+      id: String(index + 1),
+      step: (index + 1) as WorkflowProjectView["currentStep"],
+      cycle: 2,
+      status: index < 3 ? "skipped" : "completed",
+      templateSnapshot: "",
+      variables: {},
+    }));
+    render(<WorkflowWizard project={{ ...project, status: "completed", currentStep: 8, runs: completedRuns }} />);
     const progress = screen.getByRole("list", { name: "Ruta del workflow" });
 
-    expect(within(progress).getAllByText(/· Completada$/)).toHaveLength(8);
+    expect(within(progress).getAllByText(/· Omitida$/)).toHaveLength(3);
+    expect(within(progress).getAllByText(/· Completada$/)).toHaveLength(5);
     expect(within(progress).queryByText(/· Actual$/)).not.toBeInTheDocument();
     expect(within(progress).queryByRole("listitem", { current: "step" })).not.toBeInTheDocument();
   });
