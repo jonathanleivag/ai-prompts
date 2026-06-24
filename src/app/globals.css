@@ -149,6 +149,7 @@ h1 span { color: var(--violet); }
 .run-history__item { padding: 1.2rem 1.4rem; border-bottom: 1px solid var(--line); display: grid; gap: .85rem; }
 .run-history__item:last-child { border-bottom: none; }
 .run-history__meta { display: flex; align-items: center; gap: .75rem; }
+.run-history__step { font: 700 .72rem var(--utility); letter-spacing: .05em; text-transform: uppercase; color: var(--paper); }
 .run-history__cycle { font: 700 .72rem var(--utility); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
 .run-history__status { font: 600 .7rem var(--utility); letter-spacing: .04em; text-transform: uppercase; padding: .2em .55em; border-radius: 4px; }
 .run-history__status--completed, .run-history__status--approved { background: rgb(0 230 130 / 12%); color: var(--cyan); }

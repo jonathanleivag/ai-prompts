@@ -50,20 +50,21 @@ const STATUS_LABELS: Record<string, string> = {
 
 function RunHistory({ runs, currentStep, activeCycle }: { runs: WorkflowRunView[]; currentStep: Step; activeCycle: number }) {
   const history = runs
-    .filter((r) => r.step === currentStep && r.cycle !== activeCycle && r.generatedPrompt)
-    .sort((a, b) => b.cycle - a.cycle);
+    .filter((r) => r.generatedPrompt && !(r.step === currentStep && r.cycle === activeCycle))
+    .sort((a, b) => a.cycle - b.cycle || a.step - b.step);
 
   if (history.length === 0) return null;
 
   return (
     <details className="run-history">
       <summary className="run-history__toggle">
-        Historial de esta etapa ({history.length} {history.length === 1 ? "entrada" : "entradas"})
+        Prompts anteriores ({history.length} {history.length === 1 ? "entrada" : "entradas"})
       </summary>
       <ol className="run-history__list">
         {history.map((run) => (
           <li key={run.id} className="run-history__item">
             <div className="run-history__meta">
+              <span className="run-history__step">{WORKFLOW_STEPS[run.step - 1]?.shortName} · Etapa {String(run.step).padStart(2, "0")}</span>
               <span className="run-history__cycle">Ciclo {String(run.cycle).padStart(2, "0")}</span>
               <span className={`run-history__status run-history__status--${run.status}`}>
                 {STATUS_LABELS[run.status] ?? run.status}
