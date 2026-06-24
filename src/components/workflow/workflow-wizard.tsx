@@ -274,6 +274,21 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
           <div className="workflow-grid">
             <section className="workflow-panel" aria-labelledby="variables-title">
               <p className="panel-index">01 / Variables</p><h2 id="variables-title">Configura el prompt</h2>
+              {project.currentStep === 0 && (
+                <label className="field workspace-upload">
+                  <span className="field__label">Archivo .workspace</span>
+                  <input
+                    type="file"
+                    accept=".workspace,.code-workspace"
+                    disabled={pending}
+                    className="workspace-file-input"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) setValues((current) => ({ ...current, WORKSPACE: file.name.replace(/\.(code-)?workspace$/, "") }));
+                    }}
+                  />
+                </label>
+              )}
               <VariableForm variables={variables} values={values} disabled={pending} onChange={(name, value) => setValues((current) => ({ ...current, [name]: value }))} />
               {message ? <p className="form-alert" role="alert">{message}</p> : null}
               <Button type="button" disabled={pending || variables.some((name) => !values[name]?.trim())} onClick={generate}>{pending ? "Procesando…" : "Generar y copiar"}</Button>

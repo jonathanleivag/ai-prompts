@@ -111,6 +111,9 @@ h1 span { color: var(--violet); }
 .form-layout__note p { max-width: 20ch; margin: .9rem 0 0; color: var(--muted); font-size: .84rem; line-height: 1.6; }
 .project-form { display: grid; gap: 1.45rem; max-width: 42rem; }
 .field { display: grid; gap: .55rem; }
+.workspace-file-input { cursor: pointer; }
+.workspace-file-input::file-selector-button { margin-right: .75rem; padding: .4rem .9rem; border: 1px solid var(--violet); border-radius: 6px; background: transparent; color: var(--violet-text); font-size: .8rem; cursor: pointer; }
+.workspace-file-input::file-selector-button:hover { background: var(--violet); }
 .field__label { color: var(--paper); font-size: .78rem; font-weight: 700; }
 .field input, .field textarea, .field select { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: .85rem .95rem; background: var(--slate); color: var(--paper); }
 .field textarea { resize: vertical; }
