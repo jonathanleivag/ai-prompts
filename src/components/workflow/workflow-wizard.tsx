@@ -21,6 +21,7 @@ export type WorkflowRunView = {
   templateSnapshot: string;
   variables: Record<string, string>;
   generatedPrompt?: string;
+  resultContent?: string;
 };
 export type WorkflowProjectView = {
   id: string;
@@ -136,6 +137,12 @@ function RunHistory({ runs, currentStep, activeCycle }: { runs: WorkflowRunView[
                 <summary>Ver prompt</summary>
                 <pre className="run-history__prompt"><code>{run.generatedPrompt}</code></pre>
               </details>
+              {run.resultContent && (
+                <details className="run-history__prompt-wrap">
+                  <summary>Resultado del agente</summary>
+                  <pre className="run-history__prompt"><code>{run.resultContent}</code></pre>
+                </details>
+              )}
             </li>
           ))}
         </ol>
@@ -165,6 +172,7 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
   const [copied, setCopied] = useState(false);
   const [confirmChanges, setConfirmChanges] = useState(false);
   const [decisionError, setDecisionError] = useState<string>();
+  const [resultContent, setResultContent] = useState<string>();
   const [pending, startTransition] = useTransition();
   const changesTrigger = useRef<HTMLButtonElement | null>(null);
   const step = WORKFLOW_STEPS.find((s) => s.step === project.currentStep)!;
@@ -233,7 +241,7 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
   function transition(decision?: "approve" | "request_changes") {
     setMessage(undefined);
     startTransition(async () => {
-      const state = { projectId: project.id, currentStep: project.currentStep, cycle: project.cycle };
+      const state = { projectId: project.id, currentStep: project.currentStep, cycle: project.cycle, resultContent };
       const result = decision ? await reviewDecisionAction({ ...state, decision }) : await completeStepAction(state);
       if (!result.ok) {
         if (decision === "request_changes") setDecisionError(result.message);
@@ -303,6 +311,25 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
                 </label>
               )}
               <VariableForm variables={variables} values={values} disabled={pending} onChange={(name, value) => setValues((current) => ({ ...current, [name]: value }))} />
+              {project.currentStep !== 0 && (
+                <label className="field workspace-upload">
+                  <span className="field__label">Resultado del agente (.md)</span>
+                  <input
+                    type="file"
+                    accept=".md,.markdown"
+                    disabled={pending}
+                    className="workspace-file-input"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = (ev) => setResultContent(ev.target?.result as string);
+                      reader.readAsText(file);
+                    }}
+                  />
+                  {resultContent && <span className="workspace-upload__ok">✓ Archivo cargado</span>}
+                </label>
+              )}
               {message ? <p className="form-alert" role="alert">{message}</p> : null}
               <Button type="button" disabled={pending || variables.some((name) => !values[name]?.trim())} onClick={generate}>{pending ? "Procesando…" : "Generar y copiar"}</Button>
               <p className="workflow-note">Generar y copiar guarda el snapshot, pero no avanza la etapa.</p>

@@ -38,6 +38,7 @@ export interface StepRunDocument {
   variables: Record<string, string>;
   generatedPrompt?: string;
   generatedAt?: Date;
+  resultContent?: string;
   completedAt?: Date;
 }
 

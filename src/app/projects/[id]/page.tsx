@@ -24,6 +24,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
       templateSnapshot: run.templateSnapshot,
       variables: run.variables,
       ...(run.generatedPrompt ? { generatedPrompt: run.generatedPrompt } : {}),
+      ...(run.resultContent ? { resultContent: run.resultContent } : {}),
     })),
   };
   return <WorkflowWizard project={view} />;

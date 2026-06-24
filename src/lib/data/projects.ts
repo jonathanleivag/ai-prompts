@@ -73,6 +73,7 @@ export interface ExpectedWorkflowState {
   projectId: string;
   currentStep: Step;
   cycle: number;
+  resultContent?: string;
 }
 
 export interface GenerateStepPromptInput extends ExpectedWorkflowState {
@@ -247,7 +248,7 @@ export function createProjectRepository(dependencies: ProjectRepositoryDependenc
             status: "active",
             generatedPrompt: { $regex: /\S/ },
           },
-          { $set: { status: runStatus, completedAt: now } },
+          { $set: { status: runStatus, completedAt: now, ...(input.resultContent ? { resultContent: input.resultContent } : {}) } },
           { session },
         );
         if (runUpdate.matchedCount === 0) {

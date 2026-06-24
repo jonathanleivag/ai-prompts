@@ -44,6 +44,7 @@ const workflowStateSchema = z.object({
   cycle: strictInteger("El ciclo debe ser un número entero").pipe(
     z.number().positive("El ciclo debe ser mayor que cero"),
   ),
+  resultContent: z.string().max(2_000_000, "El contenido no puede superar 2MB").optional(),
 });
 const createProjectSchema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio").max(120, "El nombre no puede superar 120 caracteres"),
