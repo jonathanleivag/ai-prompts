@@ -87,7 +87,7 @@ describeWithMongo("template repository (MongoDB transaction integration)", () =>
 
   beforeAll(async () => {
     client = await new MongoClient(uri!).connect();
-    const db = client.db(`template_repository_${new ObjectId().toHexString()}`);
+    const db = client.db(`tpl_${new ObjectId().toHexString()}`);
     collections = {
       projects: db.collection("projects"),
       stepRuns: db.collection("step_runs"),
