@@ -3,14 +3,18 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 
 import { ObjectId } from "mongodb";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type {
   SeedPersistence,
   SeedTransactionClient,
   SeedTransactionSession,
 } from "./seed-templates";
-import { persistSeedTemplates, readSeedTemplates } from "./seed-templates";
+import {
+  persistSeedTemplates,
+  readSeedTemplates,
+  runSeedTemplatesCli,
+} from "./seed-templates";
 
 const temporaryDirectories: string[] = [];
 
@@ -215,5 +219,38 @@ describe("persistSeedTemplates", () => {
       currentVersion: 3,
       variables: ["EDITED"],
     });
+  });
+});
+
+describe("runSeedTemplatesCli", () => {
+  it("closes the Mongo client after a successful seed", async () => {
+    const calls: string[] = [];
+
+    await runSeedTemplatesCli("/templates", {
+      async seedTemplates(rootDir) {
+        expect(rootDir).toBe("/templates");
+        calls.push("seed");
+      },
+      async closeMongoClient() {
+        calls.push("close");
+      },
+    });
+
+    expect(calls).toEqual(["seed", "close"]);
+  });
+
+  it("closes the Mongo client when seeding fails", async () => {
+    const seedError = new Error("seed failed");
+    const closeMongoClient = vi.fn(async () => undefined);
+
+    await expect(
+      runSeedTemplatesCli("/templates", {
+        async seedTemplates() {
+          throw seedError;
+        },
+        closeMongoClient,
+      }),
+    ).rejects.toBe(seedError);
+    expect(closeMongoClient).toHaveBeenCalledOnce();
   });
 });

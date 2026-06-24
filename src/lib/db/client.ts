@@ -32,6 +32,20 @@ export function getMongoClient(): Promise<MongoClient> {
   return productionClientPromise;
 }
 
+export async function closeMongoClient(): Promise<void> {
+  const clientPromise =
+    process.env.NODE_ENV === "development"
+      ? globalThis.__aiPromptWorkflowMongoClientPromise
+      : productionClientPromise;
+
+  globalThis.__aiPromptWorkflowMongoClientPromise = undefined;
+  productionClientPromise = undefined;
+
+  if (!clientPromise) return;
+  const client = await clientPromise;
+  await client.close();
+}
+
 export async function getDb(): Promise<Db> {
   const databaseName = requiredEnvironmentVariable("MONGODB_DB");
   return (await getMongoClient()).db(databaseName);

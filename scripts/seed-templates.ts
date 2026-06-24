@@ -48,6 +48,11 @@ export interface SeedPersistence {
   ): Promise<void>;
 }
 
+export interface SeedTemplatesCliDependencies {
+  seedTemplates(rootDir: string): Promise<void>;
+  closeMongoClient(): Promise<void>;
+}
+
 export async function readSeedTemplates(rootDir: string): Promise<SeedTemplate[]> {
   const filenames = (await readdir(rootDir))
     .filter((filename) => TEMPLATE_FILENAME.test(filename))
@@ -178,6 +183,25 @@ export async function persistSeedTemplates(
   }
 }
 
+export async function runSeedTemplatesCli(
+  rootDir: string,
+  dependencies?: SeedTemplatesCliDependencies,
+): Promise<void> {
+  const cliDependencies = dependencies ?? {
+    seedTemplates,
+    async closeMongoClient() {
+      const { closeMongoClient } = await import("../src/lib/db/client");
+      await closeMongoClient();
+    },
+  };
+
+  try {
+    await cliDependencies.seedTemplates(rootDir);
+  } finally {
+    await cliDependencies.closeMongoClient();
+  }
+}
+
 function recommendedAgent(
   filename: string,
 ): SeedTemplate["recommendedAgent"] {
@@ -189,7 +213,7 @@ function recommendedAgent(
 
 const invokedFile = process.argv[1] ? path.resolve(process.argv[1]) : undefined;
 if (invokedFile === fileURLToPath(import.meta.url)) {
-  seedTemplates(process.cwd()).catch((error: unknown) => {
+  runSeedTemplatesCli(process.cwd()).catch((error: unknown) => {
     console.error(error instanceof Error ? error.message : error);
     process.exitCode = 1;
   });
