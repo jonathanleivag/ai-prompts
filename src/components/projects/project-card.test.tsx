@@ -28,7 +28,7 @@ describe("ProjectCard", () => {
   });
 
   test("presenta como omitidos los pulsos anteriores a la etapa inicial", () => {
-    render(<ProjectCard project={baseProject} />);
+    render(<ProjectCard project={{ ...baseProject, cycle: 1 }} />);
 
     expect(screen.getByText("Requerimiento: omitida")).toBeInTheDocument();
     expect(screen.getByText("Análisis técnico: omitida")).toBeInTheDocument();
@@ -41,6 +41,15 @@ describe("ProjectCard", () => {
 
     expect(screen.getByText("Requerimiento: actual")).toBeInTheDocument();
     expect(screen.queryByText("Requerimiento: omitida")).not.toBeInTheDocument();
+  });
+
+  test("reinicia el progreso visual completo en ciclos posteriores", () => {
+    render(<ProjectCard project={{ ...baseProject, currentStep: 2, cycle: 2 }} />);
+
+    expect(screen.getByText("Requerimiento: completada")).toBeInTheDocument();
+    expect(screen.getByText("Análisis técnico: actual")).toBeInTheDocument();
+    expect(screen.getByText("Diseño UX/UI: pendiente")).toBeInTheDocument();
+    expect(screen.queryByText(/: omitida$/)).not.toBeInTheDocument();
   });
 
   test("presenta el cierre sin sugerir un próximo prompt en un proyecto completado", () => {

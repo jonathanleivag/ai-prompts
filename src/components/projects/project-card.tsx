@@ -36,7 +36,7 @@ export function ProjectCard({ project }: { project: ProjectSummary }) {
         {WORKFLOW_STEPS.map(({ step, name, shortName }) => {
           const state = !isCompleted && step === project.currentStep
             ? "active"
-            : step < project.initialStep
+            : project.cycle === 1 && step < project.initialStep
             ? "omitted"
             : isCompleted || step < project.currentStep
             ? "complete"
