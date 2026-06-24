@@ -23,7 +23,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <header className="site-header">
           <nav aria-label="Navegación principal" className="site-nav">
             <Link className="brand" href="/">
-              <Image src="/logo.webp" alt="Prompt Pipeline" width={32} height={32} className="brand__logo" unoptimized />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.webp" alt="Prompt Pipeline" width={32} height={32} className="brand__logo" />
               <span>Prompt Pipeline</span>
             </Link>
             <div className="nav-links">

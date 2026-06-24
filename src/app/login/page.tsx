@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { signIn } from "@/auth";
 
 export default function LoginPage() {
@@ -6,7 +5,8 @@ export default function LoginPage() {
     <div className="login-page">
       <div className="login-card">
         <div className="login-card__brand">
-          <Image src="/logo.webp" alt="Prompt Pipeline" width={40} height={40} className="brand__logo" unoptimized />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.webp" alt="Prompt Pipeline" width={40} height={40} className="brand__logo" />
           <span className="login-card__title">Prompt Pipeline</span>
         </div>
         <p className="login-card__description">
