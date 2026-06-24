@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { extractVariables, renderPrompt, validateTemplate } from "./template";
+import { extractVariables, previewPrompt, renderPrompt, validateTemplate } from "./template";
 
 describe("prompt templates", () => {
   it("extracts variables in first-seen order without duplicates", () => {
@@ -62,5 +62,37 @@ describe("prompt templates", () => {
     expect(renderPrompt(content, values)).toBe("Build Login");
     expect(content).toBe("Build {{FEATURE}}");
     expect(values).toEqual({ FEATURE: "Login" });
+  });
+});
+
+describe("previewPrompt", () => {
+  it("replaces variables that have a value", () => {
+    expect(previewPrompt("Hello {{NAME}}", { NAME: "mundo" })).toBe("Hello mundo");
+  });
+
+  it("shows [VAR] for variables with empty string", () => {
+    expect(previewPrompt("Hello {{NAME}}", { NAME: "" })).toBe("Hello [NAME]");
+  });
+
+  it("shows [VAR] for variables with whitespace-only value", () => {
+    expect(previewPrompt("Hello {{NAME}}", { NAME: "   " })).toBe("Hello [NAME]");
+  });
+
+  it("shows [VAR] for variables not present in values", () => {
+    expect(previewPrompt("Hello {{NAME}}", {})).toBe("Hello [NAME]");
+  });
+
+  it("handles multiple variables, mixed filled and empty", () => {
+    expect(
+      previewPrompt("{{FEATURE}} para {{AUDIENCE}}", { FEATURE: "offline", AUDIENCE: "" })
+    ).toBe("offline para [AUDIENCE]");
+  });
+
+  it("returns content unchanged when there are no variables", () => {
+    expect(previewPrompt("Sin variables aquí.", {})).toBe("Sin variables aquí.");
+  });
+
+  it("does not throw on empty content", () => {
+    expect(previewPrompt("", {})).toBe("");
   });
 });

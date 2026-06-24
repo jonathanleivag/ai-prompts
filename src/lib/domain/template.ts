@@ -52,3 +52,13 @@ export function renderPrompt(
 
   return content.replace(VARIABLE, (_, variable: string) => values[variable]);
 }
+
+export function previewPrompt(
+  content: string,
+  values: Readonly<Record<string, string>>,
+): string {
+  return content.replace(
+    /\{\{([A-Z][A-Z0-9_]*)\}\}/g,
+    (_, variable: string) => (values[variable]?.trim() ? values[variable] : `[${variable}]`),
+  );
+}
