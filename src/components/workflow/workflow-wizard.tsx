@@ -284,7 +284,20 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
                     className="workspace-file-input"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (file) setValues((current) => ({ ...current, WORKSPACE: file.name.replace(/\.(code-)?workspace$/, "") }));
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        try {
+                          const json = JSON.parse(ev.target?.result as string);
+                          const folders: string[] = (json.folders ?? []).map((f: { path: string }) => f.path).filter(Boolean);
+                          if (folders.length > 0) {
+                            setValues((current) => ({ ...current, WORKSPACE: folders.join(", ") }));
+                            return;
+                          }
+                        } catch {}
+                        setValues((current) => ({ ...current, WORKSPACE: file.name.replace(/\.(code-)?workspace$/, "") }));
+                      };
+                      reader.readAsText(file);
                     }}
                   />
                 </label>
