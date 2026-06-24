@@ -63,6 +63,9 @@ export async function saveTemplateAction(formData: FormData): Promise<ActionResu
     2: ["{{ANALISIS_DE_REQUERIMIENTO}}", "{{OUTPUT_PATH}}"],
     3: ["{{ANALISIS_DE_REQUERIMIENTO}}", "{{ANALISIS_DEL_PROYECTO}}", "{{OUTPUT_PATH}}"],
     4: ["{{ANALISIS_DE_REQUERIMIENTO}}", "{{ANALISIS_DEL_PROYECTO}}", "{{DISENIO_UI_UX}}"],
+    5: ["{{OUTPUT_PATH}}"],
+    6: ["{{DETALLE}}"],
+    7: ["{{RELEASE_NAME}}", "{{OUTPUT_PATH}}"],
   };
   const required = parsed.data.step !== undefined ? REQUIRED[parsed.data.step] : undefined;
   if (required) {
