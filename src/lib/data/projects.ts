@@ -63,6 +63,7 @@ export interface ProjectRepositoryDependencies {
 }
 
 export interface CreateProjectInput {
+  userId: string;
   name: string;
   description: string;
   initialStep: Step;
@@ -86,8 +87,9 @@ export function createProjectRepository(dependencies: ProjectRepositoryDependenc
   const { client, collections } = dependencies;
 
   return {
-    async listProjects({ q, page, pageSize }: { q?: string; page?: number; pageSize?: number } = {}): Promise<{ items: ProjectSummary[]; total: number }> {
-      const filter = q?.trim() ? { name: { $regex: q.trim(), $options: "i" } } : {};
+    async listProjects({ userId, q, page, pageSize }: { userId: string; q?: string; page?: number; pageSize?: number }): Promise<{ items: ProjectSummary[]; total: number }> {
+      const filter: Record<string, unknown> = { userId };
+      if (q?.trim()) filter.name = { $regex: q.trim(), $options: "i" };
       const size = pageSize ?? 6;
       const skip = ((page ?? 1) - 1) * size;
       const [items, total] = await Promise.all([
@@ -149,6 +151,7 @@ export function createProjectRepository(dependencies: ProjectRepositoryDependenc
           const now = new Date();
           const project: ProjectDocument = {
             _id: new ObjectId(),
+            userId: input.userId,
             name: input.name,
             description: input.description,
             currentStep: input.initialStep,
@@ -310,7 +313,7 @@ async function runtimeRepository() {
   return createProjectRepository({ client, collections });
 }
 
-export async function listProjects(params: { q?: string; page?: number; pageSize?: number } = {}) {
+export async function listProjects(params: { userId: string; q?: string; page?: number; pageSize?: number }) {
   return (await runtimeRepository()).listProjects(params);
 }
 export async function getProjectDetail(id: string) {

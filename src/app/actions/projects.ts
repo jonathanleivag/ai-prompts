@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { auth } from "@/auth";
 import {
   WorkflowConflictError,
   PromptRequiredError,
@@ -15,6 +16,13 @@ import {
 } from "@/lib/data/projects";
 import { actionFailure, type ActionResult, validationFailure } from "@/lib/actions/state";
 import { strictInteger } from "@/lib/actions/schema";
+
+async function requireUserId(): Promise<string> {
+  const session = await auth();
+  const userId = session?.user?.email;
+  if (!userId) redirect("/login");
+  return userId;
+}
 
 const stepSchema = strictInteger("La etapa debe estar entre 1 y 8").pipe(
   z.union([
@@ -59,12 +67,13 @@ type GeneratePromptInput = z.input<typeof generatePromptSchema>;
 type ReviewDecisionInput = z.input<typeof reviewDecisionSchema>;
 
 export async function createProjectAction(formData: FormData): Promise<ActionResult<unknown>> {
+  const userId = await requireUserId();
   const parsed = createProjectSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return validationFailure(parsed.error);
 
   let project: Awaited<ReturnType<typeof createProject>>;
   try {
-    project = await createProject(parsed.data);
+    project = await createProject({ ...parsed.data, userId });
   } catch (error) {
     return recoverableFailure(error);
   }
@@ -126,8 +135,8 @@ export async function deleteProjectAction(projectId: string): Promise<ActionResu
   } catch (error) {
     return actionFailure(error);
   }
-  revalidatePath("/projects");
-  redirect("/projects");
+  revalidatePath("/");
+  redirect("/");
 }
 
 function recoverableFailure(error: unknown): ActionResult<never> {

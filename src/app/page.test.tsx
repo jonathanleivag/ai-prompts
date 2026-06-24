@@ -2,7 +2,8 @@ import { render, screen } from "@testing-library/react";
 import HomePage from "./page";
 
 vi.mock("@/lib/data/projects", () => ({ listProjects: vi.fn().mockResolvedValue({ items: [], total: 0 }) }));
-vi.mock("next/navigation", () => ({ useRouter: vi.fn(), usePathname: () => "/", useSearchParams: () => new URLSearchParams() }));
+vi.mock("@/auth", () => ({ auth: vi.fn().mockResolvedValue({ user: { email: "test@example.com" } }) }));
+vi.mock("next/navigation", () => ({ useRouter: vi.fn(), usePathname: () => "/", useSearchParams: () => new URLSearchParams(), redirect: vi.fn() }));
 
 test("renders the project dashboard heading", async () => {
   render(await HomePage({ searchParams: Promise.resolve({}) }));

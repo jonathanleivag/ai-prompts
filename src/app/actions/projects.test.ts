@@ -23,6 +23,7 @@ vi.mock("@/lib/data/projects", () => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: next.revalidatePath }));
 vi.mock("next/navigation", () => ({ redirect: next.redirect }));
+vi.mock("@/auth", () => ({ auth: vi.fn().mockResolvedValue({ user: { email: "test@example.com" } }) }));
 
 import {
   completeStepAction,
@@ -82,7 +83,7 @@ describe("createProjectAction", () => {
     );
 
     expect(result).toEqual({ ok: true, data: { id, currentStep: 1, cycle: 1, status: "active" } });
-    expect(repository.createProject).toHaveBeenCalledWith({ name: "Proyecto", description: "desc", initialStep: 1 });
+    expect(repository.createProject).toHaveBeenCalledWith({ userId: "test@example.com", name: "Proyecto", description: "desc", initialStep: 1 });
     expect(next.revalidatePath).toHaveBeenCalledWith("/projects");
     expect(next.redirect).toHaveBeenCalledWith(`/projects/${id}`);
   });

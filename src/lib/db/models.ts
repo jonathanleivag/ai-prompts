@@ -10,6 +10,7 @@ export type RecommendedAgent =
 
 export interface ProjectDocument {
   _id: ObjectId;
+  userId: string;
   name: string;
   description: string;
   currentStep: Step;

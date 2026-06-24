@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
+import { auth } from "@/auth";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { Pagination } from "@/components/ui/pagination";
@@ -11,11 +13,15 @@ import { listProjects } from "@/lib/data/projects";
 const PAGE_SIZE = 6;
 
 export default async function HomePage({ searchParams }: { searchParams: Promise<Record<string, string>> }) {
+  const session = await auth();
+  const userId = session?.user?.email;
+  if (!userId) redirect("/login");
+
   const params = await searchParams;
   const q = params.q ?? "";
   const page = Math.max(1, Number(params.page) || 1);
 
-  const { items: projects, total } = await listProjects({ q, page, pageSize: PAGE_SIZE });
+  const { items: projects, total } = await listProjects({ userId, q, page, pageSize: PAGE_SIZE });
 
   return (
     <section className="dashboard">

@@ -6,4 +6,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/login",
   },
+  callbacks: {
+    jwt({ token, profile }) {
+      if (profile?.login) token.login = profile.login;
+      return token;
+    },
+    session({ session, token }) {
+      if (token.login) (session.user as { login?: string }).login = token.login as string;
+      return session;
+    },
+  },
 });

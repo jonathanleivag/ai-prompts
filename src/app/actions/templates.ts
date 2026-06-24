@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { auth } from "@/auth";
 import { actionFailure, type ActionResult, validationFailure } from "@/lib/actions/state";
 import { strictInteger } from "@/lib/actions/schema";
 import {
@@ -35,7 +36,23 @@ const restoreTemplateSchema = z.object({
 
 type RestoreTemplateInput = z.input<typeof restoreTemplateSchema>;
 
+const TEMPLATE_EDITOR = "jonathanleivag";
+
+async function requireTemplateEditor(): Promise<ActionResult<never> | null> {
+  const session = await auth();
+  const username = (session?.user as { login?: string } | undefined)?.login
+    ?? session?.user?.name
+    ?? "";
+  if (username !== TEMPLATE_EDITOR) {
+    return { ok: false, message: "No tienes permiso para editar plantillas" };
+  }
+  return null;
+}
+
 export async function saveTemplateAction(formData: FormData): Promise<ActionResult<unknown>> {
+  const denied = await requireTemplateEditor();
+  if (denied) return denied;
+
   const parsed = saveTemplateSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return validationFailure(parsed.error);
 
@@ -50,6 +67,9 @@ export async function saveTemplateAction(formData: FormData): Promise<ActionResu
 }
 
 export async function restoreTemplateAction(input: RestoreTemplateInput): Promise<ActionResult<unknown>> {
+  const denied = await requireTemplateEditor();
+  if (denied) return denied;
+
   const parsed = restoreTemplateSchema.safeParse(input);
   if (!parsed.success) return validationFailure(parsed.error);
 

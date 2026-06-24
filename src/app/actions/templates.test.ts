@@ -25,6 +25,7 @@ vi.mock("@/lib/data/templates", () => ({
   },
 }));
 vi.mock("next/cache", () => ({ revalidatePath: next.revalidatePath }));
+vi.mock("@/auth", () => ({ auth: vi.fn().mockResolvedValue({ user: { name: "jonathanleivag", login: "jonathanleivag" } }) }));
 
 import { restoreTemplateAction, saveTemplateAction } from "./templates";
 import { TemplateConflictError } from "@/lib/data/templates";

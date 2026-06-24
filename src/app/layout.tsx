@@ -15,7 +15,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const user = session?.user;
 
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <body>
         <header className="site-header">
           <nav aria-label="Navegación principal" className="site-nav">
@@ -24,8 +24,12 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               <span>Prompt Pipeline</span>
             </Link>
             <div className="nav-links">
-              <Link href="/">Proyectos</Link>
-              <Link href="/templates">Plantillas</Link>
+              {user ? (
+                <>
+                  <Link href="/">Proyectos</Link>
+                  <Link href="/templates">Plantillas</Link>
+                </>
+              ) : null}
               <span className="nav-status"><i aria-hidden="true" /> Sistema listo</span>
               {user ? (
                 <div className="nav-user">
