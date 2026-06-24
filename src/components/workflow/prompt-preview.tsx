@@ -30,7 +30,7 @@ export function PromptPreview({
         <h3 id="prompt-preview-title">
           {isLivePreview ? "Vista previa" : "Snapshot del prompt"}
         </h3>
-        <Button type="button" variant="quiet" disabled={isLivePreview} onClick={onCopy}>
+        <Button type="button" variant="quiet" disabled={isLivePreview} onClick={() => onCopy()}>
           Copiar prompt
         </Button>
       </div>

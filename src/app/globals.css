@@ -142,6 +142,17 @@ h1 span { color: var(--violet); }
 .workflow-route__step--completed .workflow-route__pulse { background: var(--cyan); }
 .workflow-route__step--skipped { border-style: dashed; color: var(--muted); }
 .workflow-route__step--skipped .workflow-route__pulse { background: var(--ink); border-color: var(--muted); }
+.workflow-route__agent { display: block; margin-top: .2rem; font: .52rem var(--utility); letter-spacing: .03em; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.workflow-route__step--current .workflow-route__agent { color: var(--violet-text); }
+.agent-checklist { margin: 1rem 0 0; padding: .9rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--slate); display: flex; flex-direction: column; gap: .2rem; }
+.agent-checklist__title { margin: 0 0 .6rem; color: var(--muted); font: .63rem var(--utility); letter-spacing: .08em; text-transform: uppercase; }
+.agent-checklist__item { display: flex; align-items: center; gap: .65rem; padding: .45rem .5rem; border-radius: 6px; color: var(--muted); font: .82rem var(--body); cursor: pointer; transition: background 120ms ease, color 120ms ease; }
+.agent-checklist__item:hover { background: rgb(124 108 255 / 8%); color: var(--paper); }
+.agent-checklist__item:has(input:checked) { color: var(--cyan); }
+.agent-checklist__item input[type="checkbox"] { appearance: none; -webkit-appearance: none; flex-shrink: 0; width: 1rem; height: 1rem; border: 1.5px solid var(--muted); border-radius: 4px; background: transparent; cursor: pointer; transition: border-color 120ms ease, background 120ms ease; position: relative; }
+.agent-checklist__item input[type="checkbox"]:checked { background: var(--violet); border-color: var(--violet); }
+.agent-checklist__item input[type="checkbox"]:checked::after { content: ""; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 10 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 4l3 3 5-6' stroke='%230a1020' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/10px no-repeat; }
+.agent-checklist__item input[type="checkbox"]:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
 .workflow-heading { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(16rem, .65fr); gap: clamp(2rem, 8vw, 7rem); align-items: end; padding-bottom: 3rem; border-bottom: 1px solid var(--line); }
 .workflow-heading h1 { max-width: 12ch; }
 .workflow-heading h2, .workflow-panel h2, .workflow-complete h2, .confirmation h2 { margin: 0; font: 600 clamp(1.8rem, 3vw, 2.8rem)/1 var(--display); text-transform: uppercase; }

@@ -352,8 +352,9 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
             <div className="workflow-output">
               <p className="panel-index">02 / Salida persistente</p>
               <PromptPreview prompt={prompt} preview={previewProp} copyError={copyError} copied={copied} onCopy={copy} />
-              {project.currentStep === 0 && (
+              {project.currentStep === 0 && prompt && (
                 <div className="agent-checklist">
+                  <p className="agent-checklist__title">Confirma que ejecutaste cada agente</p>
                   {step0Agents.map((agent) => (
                     <label key={agent} className="agent-checklist__item">
                       <input type="checkbox" checked={agentsChecked[agent] ?? false} onChange={() => setAgentsChecked((prev) => ({ ...prev, [agent]: !prev[agent] }))} />
@@ -362,7 +363,7 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
                   ))}
                 </div>
               )}
-              {project.currentStep !== 0 && project.currentStep !== 4 && (
+              {project.currentStep !== 0 && project.currentStep !== 4 && prompt && (
                 <label className="field workspace-upload">
                   <span className="field__label">Resultado del agente (.md)</span>
                   <input

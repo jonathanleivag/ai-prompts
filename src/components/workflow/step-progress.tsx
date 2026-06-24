@@ -8,7 +8,7 @@ export function StepProgress({ currentStep, currentCycle, runs, projectStatus }:
   return (
     <nav className="workflow-progress" aria-label="Progreso del proyecto">
       <ol className="workflow-route" aria-label="Ruta del workflow">
-        {WORKFLOW_STEPS.map(({ step, name, shortName }) => {
+        {WORKFLOW_STEPS.map(({ step, name, shortName, recommendedAgent }) => {
           const runStatus = statusByStep.get(step);
           const state = runStatus === "skipped" ? "skipped" : projectStatus === "completed" ? "completed" : step === currentStep ? "current" : runStatus && runStatus !== "active" ? "completed" : "pending";
           const label = state === "skipped" ? "Omitida" : state === "current" ? "Actual" : state === "completed" ? "Completada" : "Pendiente";
@@ -18,6 +18,7 @@ export function StepProgress({ currentStep, currentCycle, runs, projectStatus }:
               <span className="workflow-route__index">{String(step).padStart(2, "0")}</span>
               <span className="workflow-route__name">{name} · {label}</span>
               <span className="workflow-route__short" aria-hidden="true">{shortName}</span>
+              <span className="workflow-route__agent">{recommendedAgent}</span>
             </li>
           );
         })}
