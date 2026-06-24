@@ -198,7 +198,12 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
         <div><p className="eyebrow">Ciclo {String(project.cycle).padStart(2, "0")} / Etapa {String(project.currentStep).padStart(2, "0")}</p><h1>{project.name}</h1></div>
         <div><p className="workflow-heading__code">{step.shortName}</p><h2>{step.name}</h2><p>{project.description || "Completa la etapa activa y conserva cada snapshot como evidencia del flujo."}</p></div>
       </header>
-      {project.status === "completed" ? <section className="workflow-complete"><p className="eyebrow">Ruta finalizada</p><h2>Proyecto completado</h2><p>Los ocho pulsos quedaron registrados.</p></section> : (
+      {project.status === "completed" ? (
+        <>
+          <section className="workflow-complete"><p className="eyebrow">Ruta finalizada</p><h2>Proyecto completado</h2><p>Los ocho pulsos quedaron registrados.</p></section>
+          <RunHistory runs={project.runs} currentStep={project.currentStep} activeCycle={-1} />
+        </>
+      ) : (
         <>
           <div className="workflow-grid">
             <section className="workflow-panel" aria-labelledby="variables-title">
