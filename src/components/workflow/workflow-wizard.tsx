@@ -95,13 +95,19 @@ function RunHistory({ runs, currentStep, activeCycle }: { runs: WorkflowRunView[
         Prompts anteriores ({all.length} {all.length === 1 ? "entrada" : "entradas"})
       </summary>
       <div className="run-history__controls">
-        <input
-          className="search-input search-input--sm"
-          type="search"
-          placeholder="Buscar por etapa o variable…"
-          aria-label="Buscar en el historial"
-          onChange={(e) => handleSearch(e.target.value)}
-        />
+        <div className="search-wrap search-wrap--sm">
+          <input
+            className="search-input search-input--sm"
+            type="search"
+            placeholder="Buscar por etapa o variable…"
+            aria-label="Buscar en el historial"
+            onChange={(e) => handleSearch(e.target.value)}
+          />
+          <svg className="search-wrap__icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M10 10.5 13.5 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </div>
       </div>
       {paginated.length === 0 ? (
         <p className="run-history__empty">Sin resultados para "{q}".</p>
