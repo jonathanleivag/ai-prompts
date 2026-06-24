@@ -87,7 +87,7 @@ describe("TemplateEditor", () => {
 
     await waitFor(() => expect(actions.save).toHaveBeenCalled());
     const data = actions.save.mock.calls[0][0] as FormData;
-    expect(Object.fromEntries(data)).toEqual({ templateId: template.id, content: "Implementa {{FEATURE}} con pruebas" });
+    expect(Object.fromEntries(data)).toEqual({ templateId: template.id, content: "Implementa {{FEATURE}} con pruebas", step: String(template.step) });
     expect(await screen.findByRole("status")).toHaveTextContent("Versión 4 guardada");
     expect(navigation.refresh).toHaveBeenCalled();
   });

@@ -5,20 +5,11 @@ vi.mock("@/app/actions/projects", () => ({ createProjectAction: vi.fn() }));
 import { ProjectForm } from "./project-form";
 
 describe("ProjectForm", () => {
-  test("expone etiquetas accesibles y selecciona la etapa 1 por defecto", () => {
+  test("expone etiquetas accesibles y siempre empieza en etapa 0", () => {
     render(<ProjectForm createAction={vi.fn()} />);
 
     expect(screen.getByLabelText("Nombre del proyecto")).toBeInTheDocument();
     expect(screen.getByLabelText("Descripción")).toBeInTheDocument();
-    expect(screen.getByLabelText("Etapa inicial")).toHaveValue("0");
-  });
-
-  test("ofrece las nueve etapas reales del workflow", () => {
-    render(<ProjectForm createAction={vi.fn()} />);
-
-    expect(screen.getAllByRole("option")).toHaveLength(9);
-    expect(screen.getByRole("option", { name: /0 · Contexto de Workspace/ })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: /8 · Checklist de producción/ })).toBeInTheDocument();
   });
 
   test("muestra errores y conserva los valores enviados", async () => {
@@ -35,14 +26,10 @@ describe("ProjectForm", () => {
     fireEvent.change(screen.getByLabelText("Descripción"), {
       target: { value: "Coordina la entrega del agente" },
     });
-    fireEvent.change(screen.getByLabelText("Etapa inicial"), {
-      target: { value: "4" },
-    });
     fireEvent.submit(screen.getByRole("button", { name: "Crear proyecto" }).closest("form")!);
 
     expect(await screen.findByText("El nombre es obligatorio")).toBeInTheDocument();
     expect(screen.getByLabelText("Descripción")).toHaveValue("Coordina la entrega del agente");
-    expect(screen.getByLabelText("Etapa inicial")).toHaveValue("4");
   });
 
   test("bloquea el envío mientras crea el proyecto", async () => {

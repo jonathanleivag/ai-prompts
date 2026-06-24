@@ -117,13 +117,15 @@ describe("WorkflowWizard", () => {
   });
 
   test("no permite completar hasta que exista un prompt y un .md", () => {
-    const { rerender } = render(<WorkflowWizard project={project} />);
+    const step2Run = { id: "3", step: 2 as const, cycle: 2, status: "active", templateSnapshot: "Analiza {{SCOPE}}", variables: {} };
+    const step2Project = { ...project, currentStep: 2 as const, runs: [project.runs[0], step2Run] };
+    const { rerender } = render(<WorkflowWizard project={step2Project} />);
     expect(screen.getByRole("button", { name: "Completar etapa" })).toBeDisabled();
     // con prompt pero sin resultContent: sigue deshabilitado
-    rerender(<WorkflowWizard project={{ ...project, runs: [...project.runs.slice(0, 2), { ...project.runs[2], generatedPrompt: "Listo" }] }} />);
+    rerender(<WorkflowWizard project={{ ...step2Project, runs: [project.runs[0], { ...step2Run, generatedPrompt: "Listo" }] }} />);
     expect(screen.getByRole("button", { name: "Completar etapa" })).toBeDisabled();
     // con prompt y resultContent: se habilita
-    rerender(<WorkflowWizard project={{ ...project, runs: [...project.runs.slice(0, 2), { ...project.runs[2], generatedPrompt: "Listo", resultContent: "# Resultado" }] }} />);
+    rerender(<WorkflowWizard project={{ ...step2Project, runs: [project.runs[0], { ...step2Run, generatedPrompt: "Listo", resultContent: "# Resultado" }] }} />);
     expect(screen.getByRole("button", { name: "Completar etapa" })).toBeEnabled();
   });
 

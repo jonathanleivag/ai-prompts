@@ -203,6 +203,9 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
   const [confirmChanges, setConfirmChanges] = useState(false);
   const [decisionError, setDecisionError] = useState<string>();
   const [resultContent, setResultContent] = useState<string | undefined>(activeRun?.resultContent);
+  const step0Agents = WORKFLOW_STEPS.find((s) => s.step === 0)!.recommendedAgent.split(",").map((a) => a.trim());
+  const [agentsChecked, setAgentsChecked] = useState<Record<string, boolean>>({});
+  const allAgentsChecked = project.currentStep !== 0 || step0Agents.every((a) => agentsChecked[a]);
   const [pending, startTransition] = useTransition();
   const changesTrigger = useRef<HTMLButtonElement | null>(null);
   const step = WORKFLOW_STEPS.find((s) => s.step === project.currentStep)!;
@@ -349,6 +352,16 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
             <div className="workflow-output">
               <p className="panel-index">02 / Salida persistente</p>
               <PromptPreview prompt={prompt} preview={previewProp} copyError={copyError} copied={copied} onCopy={copy} />
+              {project.currentStep === 0 && (
+                <div className="agent-checklist">
+                  {step0Agents.map((agent) => (
+                    <label key={agent} className="agent-checklist__item">
+                      <input type="checkbox" checked={agentsChecked[agent] ?? false} onChange={() => setAgentsChecked((prev) => ({ ...prev, [agent]: !prev[agent] }))} />
+                      <span>{agent}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
               {project.currentStep !== 0 && project.currentStep !== 4 && (
                 <label className="field workspace-upload">
                   <span className="field__label">Resultado del agente (.md)</span>
@@ -373,7 +386,7 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
               <div className="workflow-actions">
                 {isDecisionStep
                   ? <><Button type="button" disabled={!prompt || !resultContent || pending} onClick={() => transition("approve")}>Aprobado</Button><Button type="button" variant="quiet" disabled={!prompt || !resultContent || pending} onClick={(event) => { changesTrigger.current = event.currentTarget; setDecisionError(undefined); setConfirmChanges(true); }}>Requiere cambios</Button></>
-                  : <Button type="button" disabled={!prompt || (project.currentStep !== 0 && project.currentStep !== 4 && !resultContent) || pending} onClick={() => transition()}>Completar etapa</Button>}
+                  : <Button type="button" disabled={!prompt || (project.currentStep !== 0 && project.currentStep !== 4 && !resultContent) || !allAgentsChecked || pending} onClick={() => transition()}>Completar etapa</Button>}
               </div>
             </div>
           </div>
