@@ -124,7 +124,7 @@ h1 span { color: var(--violet); }
 .form-actions { display: flex; align-items: center; gap: 1rem; padding-top: .5rem; }
 .workflow-workbench { padding-bottom: 4rem; }
 .workflow-progress { margin-bottom: clamp(2.5rem, 6vw, 5rem); }
-.workflow-route { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: .45rem; margin: 0; padding: 0; list-style: none; }
+.workflow-route { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: .45rem; margin: 0; padding: 0; list-style: none; }
 .workflow-route__step { position: relative; min-width: 0; border-top: 5px solid #303a54; padding-top: .8rem; color: var(--quiet); }
 .workflow-route__pulse { position: absolute; top: -.58rem; left: 0; width: .72rem; height: .72rem; border: 2px solid var(--ink); border-radius: 50%; background: #303a54; }
 .workflow-route__index { display: block; font: .66rem var(--utility); }
