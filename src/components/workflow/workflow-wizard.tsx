@@ -41,6 +41,55 @@ export function WorkflowWizard({ project }: { project: WorkflowProjectView }) {
   return <WorkflowWorkbench key={stateKey} project={project} activeRun={activeRun} />;
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  completed: "Completada",
+  approved: "Aprobada",
+  changes_requested: "Rechazada",
+  skipped: "Omitida",
+};
+
+function RunHistory({ runs, currentStep, activeCycle }: { runs: WorkflowRunView[]; currentStep: Step; activeCycle: number }) {
+  const history = runs
+    .filter((r) => r.step === currentStep && r.cycle !== activeCycle && r.generatedPrompt)
+    .sort((a, b) => b.cycle - a.cycle);
+
+  if (history.length === 0) return null;
+
+  return (
+    <details className="run-history">
+      <summary className="run-history__toggle">
+        Historial de esta etapa ({history.length} {history.length === 1 ? "entrada" : "entradas"})
+      </summary>
+      <ol className="run-history__list">
+        {history.map((run) => (
+          <li key={run.id} className="run-history__item">
+            <div className="run-history__meta">
+              <span className="run-history__cycle">Ciclo {String(run.cycle).padStart(2, "0")}</span>
+              <span className={`run-history__status run-history__status--${run.status}`}>
+                {STATUS_LABELS[run.status] ?? run.status}
+              </span>
+            </div>
+            {Object.keys(run.variables).length > 0 && (
+              <dl className="run-history__vars">
+                {Object.entries(run.variables).map(([k, v]) => (
+                  <div key={k} className="run-history__var">
+                    <dt>{k}</dt>
+                    <dd>{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+            <details className="run-history__prompt-wrap">
+              <summary>Ver prompt</summary>
+              <pre className="run-history__prompt"><code>{run.generatedPrompt}</code></pre>
+            </details>
+          </li>
+        ))}
+      </ol>
+    </details>
+  );
+}
+
 function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectView; activeRun?: WorkflowRunView }) {
   const router = useRouter();
   const variables = templateVariables(activeRun?.templateSnapshot ?? "");
@@ -149,22 +198,25 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
         <div><p className="workflow-heading__code">{step.shortName}</p><h2>{step.name}</h2><p>{project.description || "Completa la etapa activa y conserva cada snapshot como evidencia del flujo."}</p></div>
       </header>
       {project.status === "completed" ? <section className="workflow-complete"><p className="eyebrow">Ruta finalizada</p><h2>Proyecto completado</h2><p>Los ocho pulsos quedaron registrados.</p></section> : (
-        <div className="workflow-grid">
-          <section className="workflow-panel" aria-labelledby="variables-title">
-            <p className="panel-index">01 / Variables</p><h2 id="variables-title">Configura el prompt</h2>
-            <VariableForm variables={variables} values={values} disabled={pending} onChange={(name, value) => setValues((current) => ({ ...current, [name]: value }))} />
-            {message ? <p className="form-alert" role="alert">{message}</p> : null}
-            <Button type="button" disabled={pending || variables.some((name) => !values[name]?.trim())} onClick={generate}>{pending ? "Procesando…" : "Generar y copiar"}</Button>
-            <p className="workflow-note">Generar y copiar guarda el snapshot, pero no avanza la etapa.</p>
-          </section>
-          <div className="workflow-output">
-            <p className="panel-index">02 / Salida persistente</p>
-            <PromptPreview prompt={prompt} preview={previewProp} copyError={copyError} copied={copied} onCopy={copy} />
-            <div className="workflow-actions">
-              {isDecisionStep ? <><Button type="button" disabled={!prompt || pending} onClick={() => transition("approve")}>Aprobado</Button><Button type="button" variant="quiet" disabled={!prompt || pending} onClick={(event) => { changesTrigger.current = event.currentTarget; setDecisionError(undefined); setConfirmChanges(true); }}>Requiere cambios</Button></> : <Button type="button" disabled={!prompt || pending} onClick={() => transition()}>Completar etapa</Button>}
+        <>
+          <div className="workflow-grid">
+            <section className="workflow-panel" aria-labelledby="variables-title">
+              <p className="panel-index">01 / Variables</p><h2 id="variables-title">Configura el prompt</h2>
+              <VariableForm variables={variables} values={values} disabled={pending} onChange={(name, value) => setValues((current) => ({ ...current, [name]: value }))} />
+              {message ? <p className="form-alert" role="alert">{message}</p> : null}
+              <Button type="button" disabled={pending || variables.some((name) => !values[name]?.trim())} onClick={generate}>{pending ? "Procesando…" : "Generar y copiar"}</Button>
+              <p className="workflow-note">Generar y copiar guarda el snapshot, pero no avanza la etapa.</p>
+            </section>
+            <div className="workflow-output">
+              <p className="panel-index">02 / Salida persistente</p>
+              <PromptPreview prompt={prompt} preview={previewProp} copyError={copyError} copied={copied} onCopy={copy} />
+              <div className="workflow-actions">
+                {isDecisionStep ? <><Button type="button" disabled={!prompt || pending} onClick={() => transition("approve")}>Aprobado</Button><Button type="button" variant="quiet" disabled={!prompt || pending} onClick={(event) => { changesTrigger.current = event.currentTarget; setDecisionError(undefined); setConfirmChanges(true); }}>Requiere cambios</Button></> : <Button type="button" disabled={!prompt || pending} onClick={() => transition()}>Completar etapa</Button>}
+              </div>
             </div>
           </div>
-        </div>
+          <RunHistory runs={project.runs} currentStep={project.currentStep} activeCycle={project.cycle} />
+        </>
       )}
       </div>
       {confirmChanges ? <div className="confirmation-backdrop"><section className="confirmation" role="dialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-description" onKeyDown={keepModalFocus}><p className="panel-index">Confirmación requerida</p><h2 id="confirm-title">Iniciar un ciclo nuevo</h2><p id="confirm-description">Esta decisión vuelve a Requerimiento y conserva el historial del ciclo actual.</p>{decisionError ? <p className="form-alert" role="alert" aria-live="assertive">{decisionError}</p> : null}<div className="form-actions"><Button type="button" autoFocus onClick={() => transition("request_changes")} disabled={pending}>Confirmar cambios</Button><Button type="button" variant="quiet" onClick={closeChanges} disabled={pending}>Cancelar</Button></div></section></div> : null}
