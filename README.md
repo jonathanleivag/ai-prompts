@@ -105,6 +105,6 @@ La sección **Plantillas** permite editar el contenido fuente. Cada guardado cre
 - `npm run test:run`: pruebas unitarias y de integración (estas últimas requieren `MONGODB_TEST_URI` cuando corresponda).
 - `npm run lint`: análisis estático.
 - `npm run build`: build de producción.
-- `npm run test:e2e`: recorrido real de la aplicación en Chromium.
+- `npm run test:e2e`: recorrido real de la aplicación en Chromium mediante el puerto dedicado `3100`.
 
-Las pruebas E2E nunca reutilizan `MONGODB_URI`. Exigen una variable `MONGODB_E2E_URI` con una cadena de conexión que incluya explícitamente una base aislada cuyo nombre contenga `e2e` o `test`, por ejemplo `mongodb://127.0.0.1:27017/ai_prompt_workflow_e2e`. Antes de cada suite se elimina exclusivamente esa base y se vuelven a cargar las plantillas. No apuntes esta variable a una base con datos que deban conservarse.
+Las pruebas E2E nunca reutilizan `MONGODB_URI`. Exigen una variable `MONGODB_E2E_URI` con una cadena de conexión que incluya explícitamente una base aislada cuyo nombre contenga `e2e` o `test`, por ejemplo `mongodb://127.0.0.1:27017/ai_prompt_workflow_e2e`. Antes de cada escenario se elimina exclusivamente esa base y se vuelven a cargar las plantillas. Playwright siempre inicia su propio servidor en `127.0.0.1:3100` con ese entorno y rechaza reutilizar otro proceso. No apuntes esta variable a una base con datos que deban conservarse.

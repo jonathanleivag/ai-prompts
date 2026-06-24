@@ -1,13 +1,27 @@
 import { expect, test } from "@playwright/test";
 
 import { advanceCurrentStep, createProject, generateCurrentPrompt, requestChanges } from "./helpers";
+import { resetE2EDatabase } from "./reset-database";
+
+test.beforeEach(async () => {
+  await resetE2EDatabase();
+});
 
 test("mantiene dos proyectos independientes en el dashboard", async ({ page }) => {
   await createProject(page, "Proyecto Alfa");
+  await advanceCurrentStep(page);
   await createProject(page, "Proyecto Beta", 4);
   await page.goto("/");
-  await expect(page.getByRole("link", { name: "Proyecto Alfa" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Proyecto Beta" })).toBeVisible();
+  const alpha = page.locator("article").filter({ hasText: "Proyecto Alfa" });
+  const beta = page.locator("article").filter({ hasText: "Proyecto Beta" });
+  await expect(alpha).toContainText("Próximo prompt · ANA");
+  await expect(beta).toContainText("Próximo prompt · IMP");
+
+  await alpha.getByRole("link", { name: "Proyecto Alfa" }).click();
+  await expect(page.getByText(/Etapa 02/)).toBeVisible();
+  await page.getByRole("link", { name: "Proyectos", exact: true }).click();
+  await beta.getByRole("link", { name: "Proyecto Beta" }).click();
+  await expect(page.getByText(/Etapa 04/)).toBeVisible();
 });
 
 test("completa el flujo de las etapas 1 a 8", async ({ page }) => {
@@ -22,9 +36,10 @@ test("completa el flujo de las etapas 1 a 8", async ({ page }) => {
 test("inicia desde la etapa 4 y registra las anteriores como omitidas", async ({ page }) => {
   await createProject(page, "Inicio implementación", 4);
   await expect(page.getByText(/Etapa 04/)).toBeVisible();
-  await expect(page.getByText("Requerimientos: completada")).toBeAttached();
-  await expect(page.getByText("Análisis: completada")).toBeAttached();
-  await expect(page.getByText("Diseño UX: completada")).toBeAttached();
+  const progress = page.getByRole("navigation", { name: "Progreso del proyecto" });
+  await expect(progress.getByText("Requerimiento · Omitida")).toBeVisible();
+  await expect(progress.getByText("Análisis técnico · Omitida")).toBeVisible();
+  await expect(progress.getByText("Diseño UX/UI · Omitida")).toBeVisible();
 });
 
 for (const step of [5, 6]) {
@@ -46,8 +61,21 @@ test("copia el prompt usando el permiso real del contexto", async ({ page, conte
 });
 
 test("permite recorrer el formulario de creación solo con teclado", async ({ page }) => {
-  await page.goto("/projects/new");
-  await page.getByLabel("Nombre del proyecto").focus();
+  await page.goto("/");
+  await page.getByRole("link", { name: "Proyectos", exact: true }).focus();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Plantillas", exact: true })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Nuevo proyecto" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/projects\/new$/);
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Prompt Pipeline" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Proyectos", exact: true })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Plantillas", exact: true })).toBeFocused();
+  await page.keyboard.press("Tab");
   await expect(page.getByLabel("Nombre del proyecto")).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.getByLabel("Descripción")).toBeFocused();
