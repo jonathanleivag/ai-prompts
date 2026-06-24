@@ -54,8 +54,8 @@ h1 span { color: var(--violet); }
 .button:disabled { cursor: wait; opacity: .65; transform: none; }
 .button--quiet { background: transparent; border-color: var(--line); color: var(--muted); }
 .button--quiet:hover { background: var(--slate); border-color: var(--muted); color: var(--paper); }
-.button--danger { background: transparent; border-color: var(--coral); color: var(--coral); }
-.button--danger:hover { background: var(--coral); border-color: var(--coral); color: var(--ink); }
+.button--danger { background: var(--coral); border-color: var(--coral); color: var(--ink); }
+.button--danger:hover { background: var(--paper); border-color: var(--paper); }
 
 .project-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1.25rem 0 0; padding: 0; list-style: none; }
 .project-card { height: 100%; padding: 1.4rem; border: 1px solid var(--line); border-radius: 10px; background: var(--slate); }
