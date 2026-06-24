@@ -48,7 +48,6 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
   const [prompt, setPrompt] = useState(activeRun?.generatedPrompt);
   const livePreview = useMemo(
     () => previewPrompt(activeRun?.templateSnapshot ?? "", values),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [activeRun?.templateSnapshot, values],
   );
   const [message, setMessage] = useState<string>();
@@ -137,6 +136,10 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
     });
   }
 
+  const previewProp = !prompt && Object.values(values).some((v) => v.trim())
+    ? livePreview || undefined
+    : undefined;
+
   return (
     <div className="workflow-workbench">
       <div data-testid="workflow-background" inert={confirmChanges ? true : undefined}>
@@ -156,7 +159,7 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
           </section>
           <div className="workflow-output">
             <p className="panel-index">02 / Salida persistente</p>
-            <PromptPreview prompt={prompt} preview={Object.values(values).some((v) => v.trim()) ? livePreview || undefined : undefined} copyError={copyError} copied={copied} onCopy={copy} />
+            <PromptPreview prompt={prompt} preview={previewProp} copyError={copyError} copied={copied} onCopy={copy} />
             <div className="workflow-actions">
               {isDecisionStep ? <><Button type="button" disabled={!prompt || pending} onClick={() => transition("approve")}>Aprobado</Button><Button type="button" variant="quiet" disabled={!prompt || pending} onClick={(event) => { changesTrigger.current = event.currentTarget; setDecisionError(undefined); setConfirmChanges(true); }}>Requiere cambios</Button></> : <Button type="button" disabled={!prompt || pending} onClick={() => transition()}>Completar etapa</Button>}
             </div>
