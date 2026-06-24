@@ -49,9 +49,13 @@ h1 { max-width: 13ch; margin: 0; font-family: var(--display); font-size: clamp(3
 h1 span { color: var(--violet); }
 .page-header__aside { display: grid; gap: 1.5rem; justify-items: start; }
 .page-header__aside p { margin: 0; color: var(--muted); font-size: .96rem; line-height: 1.65; }
-.button-link, .button { display: inline-flex; min-height: 2.9rem; align-items: center; justify-content: center; border: 1px solid var(--violet); border-radius: 8px; padding: .75rem 1.1rem; background: var(--violet); color: var(--ink); font-weight: 700; transition: background-color 160ms ease, color 160ms ease, transform 160ms ease; }
+.button-link, .button { display: inline-flex; min-height: 2.9rem; align-items: center; justify-content: center; border: 1px solid var(--violet); border-radius: 8px; padding: .75rem 1.1rem; background: var(--violet); color: var(--ink); font-weight: 700; transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, transform 160ms ease; }
 .button-link:hover, .button:hover { background: var(--paper); border-color: var(--paper); transform: translateY(-1px); }
 .button:disabled { cursor: wait; opacity: .65; transform: none; }
+.button--quiet { background: transparent; border-color: var(--line); color: var(--muted); }
+.button--quiet:hover { background: var(--slate); border-color: var(--muted); color: var(--paper); }
+.button--danger { background: transparent; border-color: var(--coral); color: var(--coral); }
+.button--danger:hover { background: var(--coral); border-color: var(--coral); color: var(--ink); }
 
 .project-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1.25rem 0 0; padding: 0; list-style: none; }
 .project-card { height: 100%; padding: 1.4rem; border: 1px solid var(--line); border-radius: 10px; background: var(--slate); }
