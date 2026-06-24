@@ -3,8 +3,15 @@
 Actúa como UX Designer Senior y QA Funcional.
 
 ## Feature
+Análisis de Requerimiento
 
-Segun el feature que te di en los archivos {{INPUT_PATH_1}} y {{INPUT_PATH_2}}, analízalo, pero no modifiques ningún archivo, solo quiero que lo analices y me des tu opinión.
+{{ANALISIS_DE_REQUERIMIENTO}}
+
+Análisis del Proyecto
+{{ANALISIS_DEL_PROYECTO}}
+
+
+Analízalo, pero no modifiques ningún archivo, solo quiero que lo analices y me des tu opinión.
 
 ## Objetivo
 

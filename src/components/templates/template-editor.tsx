@@ -54,6 +54,7 @@ export function TemplateEditor({ template }: { template: TemplateEditorView }) {
     const formData = new FormData();
     formData.set("templateId", template.id);
     formData.set("content", content);
+    formData.set("step", String(template.step));
     startTransition(async () => {
       const result = await saveTemplateAction(formData);
       if (!result.ok) {

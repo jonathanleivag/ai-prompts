@@ -39,7 +39,7 @@ function templateVariables(template: string) {
 
 export function WorkflowWizard({ project }: { project: WorkflowProjectView }) {
   const activeRun = useMemo(() => project.runs.find((run) => run.step === project.currentStep && run.cycle === project.cycle && run.status === "active") ?? project.runs.find((run) => run.step === project.currentStep && run.cycle === project.cycle), [project]);
-  const stateKey = `${project.currentStep}-${project.cycle}-${activeRun?.id}-${activeRun?.generatedPrompt ?? ""}`;
+  const stateKey = `${project.currentStep}-${project.cycle}-${activeRun?.id}-${activeRun?.generatedPrompt ?? ""}-${activeRun?.resultContent ?? ""}`;
   return <WorkflowWorkbench key={stateKey} project={project} activeRun={activeRun} />;
 }
 
@@ -128,7 +128,9 @@ function RunHistory({ runs, currentStep, activeCycle }: { runs: WorkflowRunView[
                   {Object.entries(run.variables).map(([k, v]) => (
                     <div key={k} className="run-history__var">
                       <dt>{k}</dt>
-                      <dd>{v}</dd>
+                      {v.length > 120
+                        ? <dd><details className="run-history__var-details"><summary>{v.slice(0, 80).replace(/\n/g, " ")}…</summary><pre className="run-history__prompt"><code>{v}</code></pre></details></dd>
+                        : <dd>{v}</dd>}
                     </div>
                   ))}
                 </dl>
@@ -161,7 +163,35 @@ function RunHistory({ runs, currentStep, activeCycle }: { runs: WorkflowRunView[
 function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectView; activeRun?: WorkflowRunView }) {
   const router = useRouter();
   const variables = templateVariables(activeRun?.templateSnapshot ?? "");
-  const [values, setValues] = useState(activeRun?.variables ?? {});
+  const [values, setValues] = useState(() => {
+    const initial: Record<string, string> = { ...(activeRun?.variables ?? {}) };
+    const getStepResult = (step: number) =>
+      project.runs.filter((r) => r.step === step && r.resultContent).sort((a, b) => b.cycle - a.cycle)[0]?.resultContent;
+    if (!initial["ANALISIS_DE_REQUERIMIENTO"]) {
+      const r = getStepResult(1);
+      if (r) initial["ANALISIS_DE_REQUERIMIENTO"] = r;
+    }
+    if (!initial["ANALISIS_DEL_PROYECTO"]) {
+      const r = getStepResult(2);
+      if (r) initial["ANALISIS_DEL_PROYECTO"] = r;
+    }
+    if (!initial["DISENIO_UI_UX"]) {
+      const r = getStepResult(3);
+      if (r) initial["DISENIO_UI_UX"] = r;
+    }
+    if (!initial["INPUT_PATH"]) {
+      const prevStep = (project.currentStep - 1) as number;
+      if (prevStep >= 0) {
+        const r = getStepResult(prevStep);
+        if (r) initial["INPUT_PATH"] = r;
+      }
+    }
+    if (!initial["DETALLE"]) {
+      const r = getStepResult(5);
+      if (r) initial["DETALLE"] = r;
+    }
+    return initial;
+  });
   const [prompt, setPrompt] = useState(activeRun?.generatedPrompt);
   const livePreview = useMemo(
     () => previewPrompt(activeRun?.templateSnapshot ?? "", values),
@@ -172,7 +202,7 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
   const [copied, setCopied] = useState(false);
   const [confirmChanges, setConfirmChanges] = useState(false);
   const [decisionError, setDecisionError] = useState<string>();
-  const [resultContent, setResultContent] = useState<string>();
+  const [resultContent, setResultContent] = useState<string | undefined>(activeRun?.resultContent);
   const [pending, startTransition] = useTransition();
   const changesTrigger = useRef<HTMLButtonElement | null>(null);
   const step = WORKFLOW_STEPS.find((s) => s.step === project.currentStep)!;
@@ -188,7 +218,8 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
   function generate() {
     setMessage(undefined);
     startTransition(async () => {
-      const result = await generatePromptAction({ projectId: project.id, currentStep: project.currentStep, cycle: project.cycle, variables: values });
+      const filtered = Object.fromEntries(variables.map((v) => [v, values[v] ?? ""]));
+      const result = await generatePromptAction({ projectId: project.id, currentStep: project.currentStep, cycle: project.cycle, variables: filtered });
       if (!result.ok) return setMessage(result.message);
       const data = result.data as { prompt: string; variables?: Record<string, string> };
       setPrompt(data.prompt);
@@ -311,7 +342,14 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
                 </label>
               )}
               <VariableForm variables={variables} values={values} disabled={pending} onChange={(name, value) => setValues((current) => ({ ...current, [name]: value }))} />
-              {project.currentStep !== 0 && (
+              {message ? <p className="form-alert" role="alert">{message}</p> : null}
+              <Button type="button" disabled={pending || variables.some((name) => !values[name]?.trim())} onClick={generate}>{pending ? "Procesando…" : "Generar y copiar"}</Button>
+              <p className="workflow-note">Generar y copiar guarda el snapshot, pero no avanza la etapa.</p>
+            </section>
+            <div className="workflow-output">
+              <p className="panel-index">02 / Salida persistente</p>
+              <PromptPreview prompt={prompt} preview={previewProp} copyError={copyError} copied={copied} onCopy={copy} />
+              {project.currentStep !== 0 && project.currentStep !== 4 && (
                 <label className="field workspace-upload">
                   <span className="field__label">Resultado del agente (.md)</span>
                   <input
@@ -327,18 +365,15 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
                       reader.readAsText(file);
                     }}
                   />
-                  {resultContent && <span className="workspace-upload__ok">✓ Archivo cargado</span>}
+                  {resultContent
+                    ? <span className="workspace-upload__ok">✓ {resultContent.split("\n")[0].replace(/^#+ /, "").trim()}</span>
+                    : <span className="workspace-upload__hint">Sube el .md generado por el agente para poder completar la etapa.</span>}
                 </label>
               )}
-              {message ? <p className="form-alert" role="alert">{message}</p> : null}
-              <Button type="button" disabled={pending || variables.some((name) => !values[name]?.trim())} onClick={generate}>{pending ? "Procesando…" : "Generar y copiar"}</Button>
-              <p className="workflow-note">Generar y copiar guarda el snapshot, pero no avanza la etapa.</p>
-            </section>
-            <div className="workflow-output">
-              <p className="panel-index">02 / Salida persistente</p>
-              <PromptPreview prompt={prompt} preview={previewProp} copyError={copyError} copied={copied} onCopy={copy} />
               <div className="workflow-actions">
-                {isDecisionStep ? <><Button type="button" disabled={!prompt || pending} onClick={() => transition("approve")}>Aprobado</Button><Button type="button" variant="quiet" disabled={!prompt || pending} onClick={(event) => { changesTrigger.current = event.currentTarget; setDecisionError(undefined); setConfirmChanges(true); }}>Requiere cambios</Button></> : <Button type="button" disabled={!prompt || pending} onClick={() => transition()}>Completar etapa</Button>}
+                {isDecisionStep
+                  ? <><Button type="button" disabled={!prompt || !resultContent || pending} onClick={() => transition("approve")}>Aprobado</Button><Button type="button" variant="quiet" disabled={!prompt || !resultContent || pending} onClick={(event) => { changesTrigger.current = event.currentTarget; setDecisionError(undefined); setConfirmChanges(true); }}>Requiere cambios</Button></>
+                  : <Button type="button" disabled={!prompt || (project.currentStep !== 0 && project.currentStep !== 4 && !resultContent) || pending} onClick={() => transition()}>Completar etapa</Button>}
               </div>
             </div>
           </div>

@@ -116,15 +116,19 @@ describe("WorkflowWizard", () => {
     expect(navigator.clipboard.writeText).toHaveBeenCalledTimes(2);
   });
 
-  test("no permite completar hasta que exista un prompt", () => {
+  test("no permite completar hasta que exista un prompt y un .md", () => {
     const { rerender } = render(<WorkflowWizard project={project} />);
     expect(screen.getByRole("button", { name: "Completar etapa" })).toBeDisabled();
+    // con prompt pero sin resultContent: sigue deshabilitado
     rerender(<WorkflowWizard project={{ ...project, runs: [...project.runs.slice(0, 2), { ...project.runs[2], generatedPrompt: "Listo" }] }} />);
+    expect(screen.getByRole("button", { name: "Completar etapa" })).toBeDisabled();
+    // con prompt y resultContent: se habilita
+    rerender(<WorkflowWizard project={{ ...project, runs: [...project.runs.slice(0, 2), { ...project.runs[2], generatedPrompt: "Listo", resultContent: "# Resultado" }] }} />);
     expect(screen.getByRole("button", { name: "Completar etapa" })).toBeEnabled();
   });
 
   test.each([5, 6] as const)("ofrece decisiones en la etapa %i y confirma visualmente los cambios", async (step) => {
-    const reviewProject = { ...project, currentStep: step, runs: [{ ...project.runs[2], step, generatedPrompt: "Evaluar" }] } as WorkflowProjectView;
+    const reviewProject = { ...project, currentStep: step, runs: [{ ...project.runs[2], step, generatedPrompt: "Evaluar", resultContent: "# Resultado" }] } as WorkflowProjectView;
     render(<WorkflowWizard project={reviewProject} />);
     expect(screen.getByRole("button", { name: "Aprobado" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Requiere cambios" })).toBeInTheDocument();
@@ -138,7 +142,7 @@ describe("WorkflowWizard", () => {
 
   test("mantiene el modal operativo y anuncia dentro el fallo al solicitar cambios", async () => {
     actions.decide.mockResolvedValueOnce({ ok: false, message: "No fue posible iniciar el ciclo" });
-    const reviewProject = { ...project, currentStep: 5, runs: [{ ...project.runs[2], step: 5, generatedPrompt: "Evaluar" }] } as WorkflowProjectView;
+    const reviewProject = { ...project, currentStep: 5, runs: [{ ...project.runs[2], step: 5, generatedPrompt: "Evaluar", resultContent: "# Resultado" }] } as WorkflowProjectView;
     render(<WorkflowWizard project={reviewProject} />);
     fireEvent.click(screen.getByRole("button", { name: "Requiere cambios" }));
     fireEvent.click(screen.getByRole("button", { name: "Confirmar cambios" }));
@@ -152,7 +156,7 @@ describe("WorkflowWizard", () => {
   });
 
   test("confina el foco dentro del modal de cambios", () => {
-    const reviewProject = { ...project, currentStep: 5, runs: [{ ...project.runs[2], step: 5, generatedPrompt: "Evaluar" }] } as WorkflowProjectView;
+    const reviewProject = { ...project, currentStep: 5, runs: [{ ...project.runs[2], step: 5, generatedPrompt: "Evaluar", resultContent: "# Resultado" }] } as WorkflowProjectView;
     render(<WorkflowWizard project={reviewProject} />);
     fireEvent.click(screen.getByRole("button", { name: "Requiere cambios" }));
     const dialog = screen.getByRole("dialog", { name: "Iniciar un ciclo nuevo" });
@@ -168,7 +172,7 @@ describe("WorkflowWizard", () => {
   });
 
   test("vuelve al trigger al cerrar con Escape y vuelve inerte el fondo", () => {
-    const reviewProject = { ...project, currentStep: 5, runs: [{ ...project.runs[2], step: 5, generatedPrompt: "Evaluar" }] } as WorkflowProjectView;
+    const reviewProject = { ...project, currentStep: 5, runs: [{ ...project.runs[2], step: 5, generatedPrompt: "Evaluar", resultContent: "# Resultado" }] } as WorkflowProjectView;
     render(<WorkflowWizard project={reviewProject} />);
     const trigger = screen.getByRole("button", { name: "Requiere cambios" });
     fireEvent.click(trigger);

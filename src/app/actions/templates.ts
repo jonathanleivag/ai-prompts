@@ -26,7 +26,8 @@ const contentSchema = z.string().trim().min(1, "El contenido es obligatorio").ma
     });
   }
 });
-const saveTemplateSchema = z.object({ templateId: objectIdSchema, content: contentSchema });
+const stepSchema = z.coerce.number().int().min(0).max(8);
+const saveTemplateSchema = z.object({ templateId: objectIdSchema, content: contentSchema, step: stepSchema.optional() });
 const restoreTemplateSchema = z.object({
   templateId: objectIdSchema,
   version: strictInteger("La versión debe ser un número entero").pipe(
@@ -55,6 +56,21 @@ export async function saveTemplateAction(formData: FormData): Promise<ActionResu
 
   const parsed = saveTemplateSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return validationFailure(parsed.error);
+
+  const REQUIRED: Record<number, string[]> = {
+    0: ["{{WORKSPACE}}"],
+    1: ["{{FEATURE}}", "{{OUTPUT_PATH}}"],
+    2: ["{{ANALISIS_DE_REQUERIMIENTO}}", "{{OUTPUT_PATH}}"],
+    3: ["{{ANALISIS_DE_REQUERIMIENTO}}", "{{ANALISIS_DEL_PROYECTO}}", "{{OUTPUT_PATH}}"],
+    4: ["{{ANALISIS_DE_REQUERIMIENTO}}", "{{ANALISIS_DEL_PROYECTO}}", "{{DISENIO_UI_UX}}"],
+  };
+  const required = parsed.data.step !== undefined ? REQUIRED[parsed.data.step] : undefined;
+  if (required) {
+    const missing = required.filter((v) => !parsed.data.content.includes(v));
+    if (missing.length > 0) {
+      return { ok: false, message: `La plantilla del paso ${parsed.data.step} debe incluir: ${missing.join(", ")}` };
+    }
+  }
 
   try {
     const template = await saveTemplateVersion(parsed.data);

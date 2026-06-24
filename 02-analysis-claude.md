@@ -3,8 +3,11 @@
 Actúa como Arquitecto Full Stack Senior.
 
 ## Feature
+Análisis de Requerimiento
 
-Segun el feature que te di en el archivo {{INPUT_PATH}}, analízalo, pero no modifiques ningún archivo, solo quiero que lo analices y me des tu opinión.
+{{ANALISIS_DE_REQUERIMIENTO}}
+
+Analízalo, pero no modifiques ningún archivo, solo quiero que lo analices y me des tu opinión.
 
 ## Objetivo
 

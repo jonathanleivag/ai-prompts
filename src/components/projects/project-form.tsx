@@ -58,33 +58,15 @@ export function ProjectForm({ createAction = createProjectAction }: { createActi
           key={state.values.description}
           name="description"
           placeholder="Define qué debe quedar entregado al final del recorrido."
-          rows={5}
+          maxLength={140}
+          rows={3}
         />
       </Field>
-      <Field
-        htmlFor="initialStep"
-        label="Etapa inicial"
-        hint="Las etapas anteriores quedarán registradas como omitidas."
-        error={errors?.initialStep?.[0]}
-      >
-        <select
-          aria-describedby={`initialStep-hint${errors?.initialStep ? " initialStep-error" : ""}`}
-          aria-invalid={Boolean(errors?.initialStep)}
-          defaultValue={state.values.initialStep}
-          id="initialStep"
-          key={state.values.initialStep}
-          name="initialStep"
-        >
-          {WORKFLOW_STEPS.map(({ step, name }) => (
-            <option key={step} value={step}>{step} · {name}</option>
-          ))}
-        </select>
-      </Field>
+      <input type="hidden" name="initialStep" value="0" />
       <div className="form-actions">
         <Button disabled={pending} type="submit">
           {pending ? "Creando proyecto…" : "Crear proyecto"}
         </Button>
-        <p>El wizard abrirá en la etapa que elijas.</p>
       </div>
     </form>
   );

@@ -17,9 +17,9 @@ export default async function TemplatesPage() {
       />
       <ol className="template-catalog" aria-label="Plantillas por etapa">
         {templates.map((template) => (
-          <li className="template-catalog__item" key={template.id}>
+          <li className={`template-catalog__item${Number(template.step) === 0 ? " template-catalog__item--wide" : ""}`} key={template.id}>
             <Link href={`/templates/${template.id}`}>
-              <span className="template-catalog__step">{String(template.step).padStart(2, "0")} / {WORKFLOW_STEPS[template.step - 1]?.shortName}</span>
+              <span className="template-catalog__step">{String(template.step).padStart(2, "0")} / {WORKFLOW_STEPS.find((s) => s.step === template.step)?.shortName}</span>
               <strong>{template.name}</strong>
               <span>Agente / {template.recommendedAgent}</span>
               <span>v{template.currentVersion} · {formatDate(template.updatedAt)}</span>

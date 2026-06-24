@@ -10,7 +10,11 @@ export function VariableForm({ variables, values, disabled, onChange }: {
       {variables.map((variable) => (
         <label className="field" key={variable}>
           <span className="field__label">{variable}</span>
-          <input disabled={disabled} name={variable} value={values[variable] ?? ""} onChange={(event) => onChange(variable, event.target.value)} autoComplete="off" />
+          {variable === "ANALISIS_DE_REQUERIMIENTO" || variable === "ANALISIS_DEL_PROYECTO" || variable === "DISENIO_UI_UX" || variable === "INPUT_PATH" || variable === "DETALLE"
+            ? <textarea readOnly name={variable} value={values[variable] ?? ""} onChange={() => {}} rows={6} />
+            : variable === "WORKSPACE"
+            ? <input readOnly name={variable} value={values[variable] ?? ""} onChange={() => {}} />
+            : <input disabled={disabled} name={variable} value={values[variable] ?? ""} onChange={(event) => onChange(variable, event.target.value)} autoComplete="off" placeholder={variable === "OUTPUT_PATH" ? "/Users/nombre/Development/proyecto" : undefined} />}
         </label>
       ))}
     </div>

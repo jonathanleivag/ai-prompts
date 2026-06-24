@@ -36,6 +36,6 @@ Realizar revisión exhaustiva.
 
 ### Aprobación Final
 
-Aprobado (crea un .md con todos los archivos modificados y una breve descripción de los cambios) / Requiere cambios (crear un archivo .md en el mismo directorio de los archivos modificados con todo el análisis si requiere cambios)
+Aprobado (crea un .md con todos los archivos modificados y una breve descripción de los cambios) / Requiere cambios ({{OUTPUT_PATH}})
 
 PD: Utiliza los agentes y skills que sean necesarios

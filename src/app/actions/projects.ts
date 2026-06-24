@@ -48,7 +48,7 @@ const workflowStateSchema = z.object({
 });
 const createProjectSchema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio").max(120, "El nombre no puede superar 120 caracteres"),
-  description: z.string().trim().max(5000, "La descripción no puede superar 5000 caracteres"),
+  description: z.string().trim().max(140, "La descripción no puede superar 140 caracteres"),
   initialStep: stepSchema,
 });
 const generatePromptSchema = workflowStateSchema.extend({

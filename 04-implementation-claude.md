@@ -4,7 +4,17 @@ Actúa como Desarrollador Full Stack Senior.
 
 ## Feature
 
-Segun el feature que te di en los archivos {{INPUT_PATH_1}}, {{INPUT_PATH_2}} y {{INPUT_PATH_3}}, analízalo, pero no modifiques ningún archivo, solo quiero que lo analices y me digas como lo implementarias.
+Análisis de Requerimiento
+
+{{ANALISIS_DE_REQUERIMIENTO}}
+
+Análisis del Proyecto
+{{ANALISIS_DEL_PROYECTO}}
+
+Diseño UX/UI
+{{DISENIO_UI_UX}}
+
+Analízalo, pero no modifiques ningún archivo, solo quiero que lo analices y me digas como lo implementarias.
 
 ## Reglas
 

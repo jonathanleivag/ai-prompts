@@ -4,7 +4,11 @@ Actúa como QA Senior.
 
 ## Feature
 
-Segun los archivos modificados en el/proyecto/proyectos, analisalo, pero no modifiques ningún archivo, solo quiero que lo analices los cambios hechos y me digas si funcionalmente es correcto, no quiero que modifiques nada, solo quiero que me digas si es correcto o no. Mas detalles en el archivo {{INPUT_PATH}}
+Segun los archivos modificados en el/proyecto/proyectos, analisalo, pero no modifiques ningún archivo, solo quiero que lo analices los cambios hechos y me digas si funcionalmente es correcto, no quiero que modifiques nada, solo quiero que me digas si es correcto o no.
+
+Detalle
+
+{{DETALLE}}
 
 ## Objetivo
 
