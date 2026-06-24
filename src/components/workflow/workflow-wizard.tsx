@@ -167,7 +167,7 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
   const [decisionError, setDecisionError] = useState<string>();
   const [pending, startTransition] = useTransition();
   const changesTrigger = useRef<HTMLButtonElement | null>(null);
-  const step = WORKFLOW_STEPS[project.currentStep - 1];
+  const step = WORKFLOW_STEPS.find((s) => s.step === project.currentStep)!;
   const isDecisionStep = project.currentStep === 5 || project.currentStep === 6;
 
   useEffect(() => {
