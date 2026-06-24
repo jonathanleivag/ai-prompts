@@ -23,6 +23,13 @@ export class WorkflowConflictError extends Error {
   }
 }
 
+export class PromptRequiredError extends Error {
+  constructor() {
+    super("Genera un prompt antes de continuar");
+    this.name = "PromptRequiredError";
+  }
+}
+
 export interface ProjectSummary {
   id: string;
   name: string;
@@ -30,6 +37,7 @@ export interface ProjectSummary {
   currentStep: Step;
   cycle: number;
   status: ProjectDocument["status"];
+  initialStep: Step;
   updatedAt: Date;
 }
 
@@ -206,24 +214,6 @@ export function createProjectRepository(dependencies: ProjectRepositoryDependenc
     return client.withSession((session) =>
       session.withTransaction(async () => {
         const now = new Date();
-        const update = await collections.projects.updateOne(
-          {
-            _id: projectId,
-            currentStep: input.currentStep,
-            cycle: input.cycle,
-          },
-          {
-            $set: {
-              currentStep: next.step,
-              cycle: next.cycle,
-              status: next.projectStatus,
-              updatedAt: now,
-            },
-          },
-          { session },
-        );
-        if (update.matchedCount === 0) throw new WorkflowConflictError();
-
         const runStatus =
           decision === "approve"
             ? "approved"
@@ -231,11 +221,31 @@ export function createProjectRepository(dependencies: ProjectRepositoryDependenc
               ? "changes_requested"
               : "completed";
         const runUpdate = await collections.stepRuns.updateOne(
-          { projectId, step: input.currentStep, cycle: input.cycle, status: "active" },
+          {
+            projectId,
+            step: input.currentStep,
+            cycle: input.cycle,
+            status: "active",
+            generatedPrompt: { $regex: /\S/ },
+          },
           { $set: { status: runStatus, completedAt: now } },
           { session },
         );
-        if (runUpdate.matchedCount === 0) throw new WorkflowConflictError();
+        if (runUpdate.matchedCount === 0) {
+          const activeRun = await collections.stepRuns.findOne(
+            { projectId, step: input.currentStep, cycle: input.cycle, status: "active" },
+            { session },
+          );
+          if (activeRun) throw new PromptRequiredError();
+          throw new WorkflowConflictError();
+        }
+
+        const update = await collections.projects.updateOne(
+          { _id: projectId, currentStep: input.currentStep, cycle: input.cycle },
+          { $set: { currentStep: next.step, cycle: next.cycle, status: next.projectStatus, updatedAt: now } },
+          { session },
+        );
+        if (update.matchedCount === 0) throw new WorkflowConflictError();
 
         if (next.projectStatus !== "completed") {
           const template = await collections.templates.findOne(
@@ -323,6 +333,7 @@ function projectSummary(project: ProjectDocument): ProjectSummary {
     currentStep: project.currentStep,
     cycle: project.cycle,
     status: project.status,
+    initialStep: project.initialStep,
     updatedAt: project.updatedAt,
   };
 }

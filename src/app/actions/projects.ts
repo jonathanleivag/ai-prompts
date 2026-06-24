@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import {
   WorkflowConflictError,
+  PromptRequiredError,
   completeStep,
   createProject,
   decideReview,
@@ -35,14 +36,14 @@ const workflowStateSchema = z.object({
   ),
 });
 const createProjectSchema = z.object({
-  name: z.string().trim().min(1, "El nombre es obligatorio"),
-  description: z.string().trim(),
+  name: z.string().trim().min(1, "El nombre es obligatorio").max(120, "El nombre no puede superar 120 caracteres"),
+  description: z.string().trim().max(5000, "La descripción no puede superar 5000 caracteres"),
   initialStep: stepSchema,
 });
 const generatePromptSchema = workflowStateSchema.extend({
   variables: z.record(
     z.string().regex(/^[A-Z][A-Z0-9_]*$/, "Nombre de variable inválido"),
-    z.string(),
+    z.string().max(50000, "Cada valor no puede superar 50000 caracteres"),
   ),
 });
 const reviewDecisionSchema = workflowStateSchema.extend({
@@ -117,7 +118,7 @@ export async function reviewDecisionAction(input: ReviewDecisionInput): Promise<
 }
 
 function recoverableFailure(error: unknown): ActionResult<never> {
-  if (error instanceof WorkflowConflictError) {
+  if (error instanceof WorkflowConflictError || error instanceof PromptRequiredError) {
     return { ok: false, message: error.message };
   }
   return actionFailure(error);

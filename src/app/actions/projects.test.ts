@@ -15,6 +15,11 @@ vi.mock("@/lib/data/projects", () => ({
       super("El workflow cambió; recarga el proyecto e inténtalo de nuevo");
     }
   },
+  PromptRequiredError: class PromptRequiredError extends Error {
+    constructor() {
+      super("Genera un prompt antes de continuar");
+    }
+  },
 }));
 vi.mock("next/cache", () => ({ revalidatePath: next.revalidatePath }));
 vi.mock("next/navigation", () => ({ redirect: next.redirect }));
@@ -26,6 +31,7 @@ import {
   reviewDecisionAction,
 } from "./projects";
 import { WorkflowConflictError } from "@/lib/data/projects";
+import { PromptRequiredError } from "@/lib/data/projects";
 
 const id = "507f1f77bcf86cd799439011";
 const formData = (values: Record<string, string>) => {
@@ -145,6 +151,58 @@ test("completeStepAction translates WorkflowConflictError into a recoverable res
     ok: false,
     message: "El workflow cambió; recarga el proyecto e inténtalo de nuevo",
   });
+});
+
+test("completeStepAction expone el error de dominio cuando falta generar", async () => {
+  repository.completeStep.mockRejectedValue(new PromptRequiredError());
+
+  await expect(completeStepAction({ projectId: id, currentStep: 3, cycle: 2 })).resolves.toEqual({
+    ok: false,
+    message: "Genera un prompt antes de continuar",
+  });
+});
+
+test("reviewDecisionAction expone el error de dominio cuando falta generar", async () => {
+  repository.decideReview.mockRejectedValue(new PromptRequiredError());
+
+  await expect(reviewDecisionAction({ projectId: id, currentStep: 5, cycle: 2, decision: "approve" })).resolves.toEqual({
+    ok: false,
+    message: "Genera un prompt antes de continuar",
+  });
+});
+
+test("completeStepAction no filtra errores inesperados del driver", async () => {
+  const error = new Error("MongoServerError: password=secret host=atlas.internal");
+  repository.completeStep.mockRejectedValue(error);
+  const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+  await expect(completeStepAction({ projectId: id, currentStep: 3, cycle: 2 })).resolves.toEqual({
+    ok: false,
+    message: "No se pudo completar la operación",
+  });
+  expect(consoleError).toHaveBeenCalledWith("Unexpected action error", error);
+  consoleError.mockRestore();
+});
+
+test.each([
+  ["name", { name: "x".repeat(121), description: "", initialStep: "1" }],
+  ["description", { name: "Proyecto", description: "x".repeat(5001), initialStep: "1" }],
+])("createProjectAction limita %s", async (field, values) => {
+  const result = await createProjectAction(formData(values));
+  expect(result).toMatchObject({ ok: false, fieldErrors: { [field]: expect.any(Array) } });
+  expect(repository.createProject).not.toHaveBeenCalled();
+});
+
+test("generatePromptAction limita cada valor de variable a 50000 caracteres", async () => {
+  const result = await generatePromptAction({
+    projectId: id,
+    currentStep: 2,
+    cycle: 1,
+    variables: { VALUE: "x".repeat(50001) },
+  });
+
+  expect(result).toMatchObject({ ok: false, fieldErrors: { variables: expect.any(Array) } });
+  expect(repository.generateStepPrompt).not.toHaveBeenCalled();
 });
 
 test("completeStepAction rejects boolean workflow numbers", async () => {

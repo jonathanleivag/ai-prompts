@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import { completeStepAction, generatePromptAction, reviewDecisionAction } from "@/app/actions/projects";
@@ -51,8 +51,16 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
   const [confirmChanges, setConfirmChanges] = useState(false);
   const [decisionError, setDecisionError] = useState<string>();
   const [pending, startTransition] = useTransition();
+  const changesTrigger = useRef<HTMLButtonElement | null>(null);
   const step = WORKFLOW_STEPS[project.currentStep - 1];
   const isDecisionStep = project.currentStep === 5 || project.currentStep === 6;
+
+  useEffect(() => {
+    if (!confirmChanges && !pending && changesTrigger.current) {
+      changesTrigger.current.focus();
+      changesTrigger.current = null;
+    }
+  }, [confirmChanges, pending]);
 
   function generate() {
     setMessage(undefined);
@@ -62,18 +70,48 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
       const data = result.data as { prompt: string; variables?: Record<string, string> };
       setPrompt(data.prompt);
       if (data.variables) setValues(data.variables);
+      await copy(data.prompt);
     });
   }
 
-  async function copy() {
-    if (!prompt) return;
+  async function copy(value = prompt) {
+    if (!value) return;
     setCopied(false);
     setCopyError(undefined);
     try {
-      await navigator.clipboard.writeText(prompt);
+      await navigator.clipboard.writeText(value);
       setCopied(true);
     } catch {
       setCopyError("No se pudo copiar; inténtalo nuevamente");
+    }
+  }
+
+  function closeChanges() {
+    if (pending) return;
+    setConfirmChanges(false);
+    setDecisionError(undefined);
+  }
+
+  function keepModalFocus(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeChanges();
+      return;
+    }
+    if (event.key !== "Tab") return;
+    const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>("button:not(:disabled)"));
+    const first = buttons[0];
+    const last = buttons.at(-1);
+    if (!first || !last) return;
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    } else if (!event.currentTarget.contains(document.activeElement)) {
+      event.preventDefault();
+      first.focus();
     }
   }
 
@@ -95,7 +133,8 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
 
   return (
     <div className="workflow-workbench">
-      <StepProgress currentStep={project.currentStep} runs={project.runs} projectStatus={project.status} />
+      <div data-testid="workflow-background" inert={confirmChanges ? true : undefined}>
+      <StepProgress currentStep={project.currentStep} currentCycle={project.cycle} runs={project.runs} projectStatus={project.status} />
       <header className="workflow-heading">
         <div><p className="eyebrow">Ciclo {String(project.cycle).padStart(2, "0")} / Etapa {String(project.currentStep).padStart(2, "0")}</p><h1>{project.name}</h1></div>
         <div><p className="workflow-heading__code">{step.shortName}</p><h2>{step.name}</h2><p>{project.description || "Completa la etapa activa y conserva cada snapshot como evidencia del flujo."}</p></div>
@@ -106,19 +145,20 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
             <p className="panel-index">01 / Variables</p><h2 id="variables-title">Configura el prompt</h2>
             <VariableForm variables={variables} values={values} disabled={pending} onChange={(name, value) => setValues((current) => ({ ...current, [name]: value }))} />
             {message ? <p className="form-alert" role="alert">{message}</p> : null}
-            <Button type="button" disabled={pending || variables.some((name) => !values[name]?.trim())} onClick={generate}>{pending ? "Procesando…" : "Generar prompt"}</Button>
-            <p className="workflow-note">Generar guarda el snapshot, pero no avanza la etapa.</p>
+            <Button type="button" disabled={pending || variables.some((name) => !values[name]?.trim())} onClick={generate}>{pending ? "Procesando…" : "Generar y copiar"}</Button>
+            <p className="workflow-note">Generar y copiar guarda el snapshot, pero no avanza la etapa.</p>
           </section>
           <div className="workflow-output">
             <p className="panel-index">02 / Salida persistente</p>
             <PromptPreview prompt={prompt} copyError={copyError} copied={copied} onCopy={copy} />
             <div className="workflow-actions">
-              {isDecisionStep ? <><Button type="button" disabled={!prompt || pending} onClick={() => transition("approve")}>Aprobado</Button><Button type="button" variant="quiet" disabled={!prompt || pending} onClick={() => { setDecisionError(undefined); setConfirmChanges(true); }}>Requiere cambios</Button></> : <Button type="button" disabled={!prompt || pending} onClick={() => transition()}>Completar etapa</Button>}
+              {isDecisionStep ? <><Button type="button" disabled={!prompt || pending} onClick={() => transition("approve")}>Aprobado</Button><Button type="button" variant="quiet" disabled={!prompt || pending} onClick={(event) => { changesTrigger.current = event.currentTarget; setDecisionError(undefined); setConfirmChanges(true); }}>Requiere cambios</Button></> : <Button type="button" disabled={!prompt || pending} onClick={() => transition()}>Completar etapa</Button>}
             </div>
           </div>
         </div>
       )}
-      {confirmChanges ? <div className="confirmation-backdrop" onKeyDown={(event) => { if (event.key === "Escape" && !pending) { setConfirmChanges(false); setDecisionError(undefined); } }}><section className="confirmation" role="dialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-description"><p className="panel-index">Confirmación requerida</p><h2 id="confirm-title">Iniciar un ciclo nuevo</h2><p id="confirm-description">Esta decisión vuelve a Requerimiento y conserva el historial del ciclo actual.</p>{decisionError ? <p className="form-alert" role="alert" aria-live="assertive">{decisionError}</p> : null}<div className="form-actions"><Button type="button" autoFocus onClick={() => transition("request_changes")} disabled={pending}>Confirmar cambios</Button><Button type="button" variant="quiet" onClick={() => { setConfirmChanges(false); setDecisionError(undefined); }} disabled={pending}>Cancelar</Button></div></section></div> : null}
+      </div>
+      {confirmChanges ? <div className="confirmation-backdrop"><section className="confirmation" role="dialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-description" onKeyDown={keepModalFocus}><p className="panel-index">Confirmación requerida</p><h2 id="confirm-title">Iniciar un ciclo nuevo</h2><p id="confirm-description">Esta decisión vuelve a Requerimiento y conserva el historial del ciclo actual.</p>{decisionError ? <p className="form-alert" role="alert" aria-live="assertive">{decisionError}</p> : null}<div className="form-actions"><Button type="button" autoFocus onClick={() => transition("request_changes")} disabled={pending}>Confirmar cambios</Button><Button type="button" variant="quiet" onClick={closeChanges} disabled={pending}>Cancelar</Button></div></section></div> : null}
     </div>
   );
 }

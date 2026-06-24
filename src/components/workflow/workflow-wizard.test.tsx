@@ -24,8 +24,8 @@ const project: WorkflowProjectView = {
   cycle: 2,
   status: "active",
   runs: [
-    { id: "1", step: 1, cycle: 1, status: "skipped", templateSnapshot: "Descubrir {{GOAL}}", variables: {} },
-    { id: "2", step: 2, cycle: 1, status: "completed", templateSnapshot: "Definir {{SCOPE}}", variables: { SCOPE: "MVP" }, generatedPrompt: "Definir MVP" },
+    { id: "1", step: 1, cycle: 2, status: "skipped", templateSnapshot: "Descubrir {{GOAL}}", variables: {} },
+    { id: "2", step: 2, cycle: 2, status: "completed", templateSnapshot: "Definir {{SCOPE}}", variables: { SCOPE: "MVP" }, generatedPrompt: "Definir MVP" },
     { id: "4", step: 4, cycle: 2, status: "active", templateSnapshot: "Implementa {{FEATURE}} para {{AUDIENCE}}", variables: {} },
   ],
 };
@@ -75,17 +75,30 @@ describe("WorkflowWizard", () => {
     expect(screen.getByLabelText("AUDIENCE")).toBeInTheDocument();
   });
 
-  test("genera y copia el snapshot exacto sin avanzar la etapa", async () => {
+  test("genera y copia el snapshot exacto automáticamente sin avanzar la etapa", async () => {
     render(<WorkflowWizard project={project} />);
     fireEvent.change(screen.getByLabelText("FEATURE"), { target: { value: "offline" } });
     fireEvent.change(screen.getByLabelText("AUDIENCE"), { target: { value: "equipos" } });
-    fireEvent.click(screen.getByRole("button", { name: "Generar prompt" }));
+    fireEvent.click(screen.getByRole("button", { name: "Generar y copiar" }));
 
     expect(await screen.findByText("Prompt exacto persistido")).toBeInTheDocument();
     expect(actions.generate).toHaveBeenCalledWith(expect.objectContaining({ currentStep: 4, cycle: 2 }));
     expect(actions.complete).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Copiar prompt" }));
     await waitFor(() => expect(navigator.clipboard.writeText).toHaveBeenCalledWith("Prompt exacto persistido"));
+  });
+
+  test("conserva el prompt recién generado y ofrece reintento si la copia automática falla", async () => {
+    vi.mocked(navigator.clipboard.writeText).mockRejectedValueOnce(new Error("denied"));
+    render(<WorkflowWizard project={project} />);
+    fireEvent.change(screen.getByLabelText("FEATURE"), { target: { value: "offline" } });
+    fireEvent.change(screen.getByLabelText("AUDIENCE"), { target: { value: "equipos" } });
+    fireEvent.click(screen.getByRole("button", { name: "Generar y copiar" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo copiar; inténtalo nuevamente");
+    expect(screen.getByText("Prompt exacto persistido")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Copiar prompt" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("Copiado al portapapeles.");
+    expect(navigator.clipboard.writeText).toHaveBeenCalledTimes(2);
   });
 
   test("conserva el preview y permite reintentar cuando falla el portapapeles", async () => {
@@ -136,5 +149,34 @@ describe("WorkflowWizard", () => {
     await waitFor(() => expect(within(dialog).getByRole("button", { name: "Confirmar cambios" })).toBeEnabled());
     expect(within(dialog).getByRole("button", { name: "Cancelar" })).toBeEnabled();
     expect(dialog).toContainElement(document.activeElement as HTMLElement);
+  });
+
+  test("confina el foco dentro del modal de cambios", () => {
+    const reviewProject = { ...project, currentStep: 5, runs: [{ ...project.runs[2], step: 5, generatedPrompt: "Evaluar" }] } as WorkflowProjectView;
+    render(<WorkflowWizard project={reviewProject} />);
+    fireEvent.click(screen.getByRole("button", { name: "Requiere cambios" }));
+    const dialog = screen.getByRole("dialog", { name: "Iniciar un ciclo nuevo" });
+    const confirm = within(dialog).getByRole("button", { name: "Confirmar cambios" });
+    const cancel = within(dialog).getByRole("button", { name: "Cancelar" });
+
+    cancel.focus();
+    fireEvent.keyDown(dialog, { key: "Tab" });
+    expect(confirm).toHaveFocus();
+    confirm.focus();
+    fireEvent.keyDown(dialog, { key: "Tab", shiftKey: true });
+    expect(cancel).toHaveFocus();
+  });
+
+  test("vuelve al trigger al cerrar con Escape y vuelve inerte el fondo", () => {
+    const reviewProject = { ...project, currentStep: 5, runs: [{ ...project.runs[2], step: 5, generatedPrompt: "Evaluar" }] } as WorkflowProjectView;
+    render(<WorkflowWizard project={reviewProject} />);
+    const trigger = screen.getByRole("button", { name: "Requiere cambios" });
+    fireEvent.click(trigger);
+    const dialog = screen.getByRole("dialog", { name: "Iniciar un ciclo nuevo" });
+    expect(screen.getByTestId("workflow-background")).toHaveAttribute("inert");
+
+    fireEvent.keyDown(dialog, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
   });
 });

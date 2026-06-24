@@ -16,7 +16,16 @@ export default defineConfig({
     screenshot: "only-on-failure",
     permissions: ["clipboard-read", "clipboard-write"],
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "chromium-mobile-390x844",
+      use: { ...devices["Desktop Chrome"], viewport: { width: 390, height: 844 } },
+    },
+    {
+      name: "chromium-desktop-1440x900",
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
+    },
+  ],
   globalSetup: "./tests/e2e/global-setup.ts",
   webServer: {
     command: "npm run dev -- --hostname 127.0.0.1 --port 3100",

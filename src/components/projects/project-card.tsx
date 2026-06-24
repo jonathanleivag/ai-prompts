@@ -34,16 +34,18 @@ export function ProjectCard({ project }: { project: ProjectSummary }) {
       </div>
       <ol className="pulse-route" aria-label={`Progreso: etapa ${project.currentStep} de 8`}>
         {WORKFLOW_STEPS.map(({ step, name, shortName }) => {
-          const state = isCompleted || step < project.currentStep
+          const state = !isCompleted && step === project.currentStep
+            ? "active"
+            : step < project.initialStep
+            ? "omitted"
+            : isCompleted || step < project.currentStep
             ? "complete"
-            : step === project.currentStep
-              ? "active"
-              : "waiting";
+            : "waiting";
           return (
             <li className={`pulse-route__step pulse-route__step--${state}`} key={step}>
               <span className="pulse-route__bar" aria-hidden="true" />
               <span className="pulse-route__label"><b>{String(step).padStart(2, "0")}</b> {shortName}</span>
-              <span className="sr-only">{name}: {state === "complete" ? "completada" : state === "active" ? "actual" : "pendiente"}</span>
+              <span className="sr-only">{name}: {state === "omitted" ? "omitida" : state === "complete" ? "completada" : state === "active" ? "actual" : "pendiente"}</span>
             </li>
           );
         })}

@@ -15,8 +15,9 @@ export function validationFailure(error: z.ZodError): ActionResult<never> {
 }
 
 export function actionFailure(error: unknown): ActionResult<never> {
+  console.error("Unexpected action error", error);
   return {
     ok: false,
-    message: error instanceof Error ? error.message : "No se pudo completar la operación",
+    message: "No se pudo completar la operación",
   };
 }

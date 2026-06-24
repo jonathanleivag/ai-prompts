@@ -1,10 +1,10 @@
 import { WORKFLOW_STEPS } from "@/components/projects/workflow-steps";
 import type { Step } from "@/lib/domain/types";
 
-export type ProgressRun = { step: Step; status: string };
+export type ProgressRun = { step: Step; cycle: number; status: string };
 
-export function StepProgress({ currentStep, runs, projectStatus }: { currentStep: Step; runs: ProgressRun[]; projectStatus: "active" | "completed" | "archived" }) {
-  const statusByStep = new Map(runs.map((run) => [run.step, run.status]));
+export function StepProgress({ currentStep, currentCycle, runs, projectStatus }: { currentStep: Step; currentCycle: number; runs: ProgressRun[]; projectStatus: "active" | "completed" | "archived" }) {
+  const statusByStep = new Map(runs.filter((run) => run.cycle === currentCycle).map((run) => [run.step, run.status]));
   return (
     <nav className="workflow-progress" aria-label="Progreso del proyecto">
       <ol className="workflow-route" aria-label="Ruta del workflow">

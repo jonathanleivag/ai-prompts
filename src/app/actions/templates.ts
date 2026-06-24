@@ -5,11 +5,17 @@ import { z } from "zod";
 
 import { actionFailure, type ActionResult, validationFailure } from "@/lib/actions/state";
 import { strictInteger } from "@/lib/actions/schema";
-import { restoreTemplateVersion, saveTemplateVersion } from "@/lib/data/templates";
+import {
+  restoreTemplateVersion,
+  saveTemplateVersion,
+  TemplateConflictError,
+  TemplateNotFoundError,
+  TemplateVersionNotFoundError,
+} from "@/lib/data/templates";
 import { validateTemplate } from "@/lib/domain/template";
 
 const objectIdSchema = z.string().regex(/^[a-f\d]{24}$/i, "ID inválido");
-const contentSchema = z.string().trim().min(1, "El contenido es obligatorio").superRefine((content, context) => {
+const contentSchema = z.string().trim().min(1, "El contenido es obligatorio").max(200000, "El contenido no puede superar 200000 caracteres").superRefine((content, context) => {
   try {
     validateTemplate(content);
   } catch (error) {
@@ -39,7 +45,7 @@ export async function saveTemplateAction(formData: FormData): Promise<ActionResu
     revalidatePath("/templates");
     return { ok: true, data: template };
   } catch (error) {
-    return actionFailure(error);
+    return templateFailure(error);
   }
 }
 
@@ -53,6 +59,17 @@ export async function restoreTemplateAction(input: RestoreTemplateInput): Promis
     revalidatePath("/templates");
     return { ok: true, data: template };
   } catch (error) {
-    return actionFailure(error);
+    return templateFailure(error);
   }
+}
+
+function templateFailure(error: unknown): ActionResult<never> {
+  if (
+    error instanceof TemplateConflictError ||
+    error instanceof TemplateNotFoundError ||
+    error instanceof TemplateVersionNotFoundError
+  ) {
+    return { ok: false, message: error.message };
+  }
+  return actionFailure(error);
 }

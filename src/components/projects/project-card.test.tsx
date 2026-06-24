@@ -10,6 +10,7 @@ const baseProject: ProjectSummary = {
   currentStep: 4,
   cycle: 3,
   status: "active",
+  initialStep: 4,
   updatedAt: new Date("2026-06-23T12:00:00.000Z"),
 };
 
@@ -24,6 +25,22 @@ describe("ProjectCard", () => {
     expect(screen.getAllByRole("listitem")).toHaveLength(8);
     expect(screen.getByText(/Actualizado 23 jun 2026/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Abrir proyecto Agente móvil" })).toHaveTextContent("Abrir flujo");
+  });
+
+  test("presenta como omitidos los pulsos anteriores a la etapa inicial", () => {
+    render(<ProjectCard project={baseProject} />);
+
+    expect(screen.getByText("Requerimiento: omitida")).toBeInTheDocument();
+    expect(screen.getByText("Análisis técnico: omitida")).toBeInTheDocument();
+    expect(screen.getByText("Diseño UX/UI: omitida")).toBeInTheDocument();
+    expect(screen.getByText("Implementación: actual")).toBeInTheDocument();
+  });
+
+  test("en un ciclo nuevo prioriza la etapa actual sobre la omisión inicial", () => {
+    render(<ProjectCard project={{ ...baseProject, currentStep: 1, cycle: 2 }} />);
+
+    expect(screen.getByText("Requerimiento: actual")).toBeInTheDocument();
+    expect(screen.queryByText("Requerimiento: omitida")).not.toBeInTheDocument();
   });
 
   test("presenta el cierre sin sugerir un próximo prompt en un proyecto completado", () => {

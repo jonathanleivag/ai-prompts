@@ -73,6 +73,8 @@ h1 span { color: var(--violet); }
 .pulse-route__label b { color: inherit; font-weight: 400; }
 .pulse-route__step--complete .pulse-route__bar { background: var(--cyan); }
 .pulse-route__step--complete .pulse-route__label { color: var(--cyan); }
+.pulse-route__step--omitted .pulse-route__bar { background: transparent; border: 1px dashed var(--quiet); }
+.pulse-route__step--omitted .pulse-route__label { color: var(--quiet); }
 .pulse-route__step--active .pulse-route__bar { background: var(--violet); box-shadow: 0 0 0 3px rgb(124 108 255 / 15%), 0 0 18px rgb(124 108 255 / 45%); animation: pulse 2s ease-in-out infinite; }
 .pulse-route__step--active .pulse-route__label { color: var(--paper); }
 .project-card__footer { margin-top: 1.5rem; padding-top: 1.15rem; border-top: 1px solid var(--line); }

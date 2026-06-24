@@ -52,7 +52,6 @@ for (const step of [5, 6]) {
 test("copia el prompt usando el permiso real del contexto", async ({ page, context }) => {
   await createProject(page, "Clipboard");
   await generateCurrentPrompt(page);
-  await page.getByRole("button", { name: "Copiar prompt" }).click();
   await expect(page.getByRole("status")).toHaveText("Copiado al portapapeles.");
   const clipboard = await context.grantPermissions(["clipboard-read", "clipboard-write"]).then(() =>
     page.evaluate(() => navigator.clipboard.readText()),

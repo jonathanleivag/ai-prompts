@@ -6,10 +6,28 @@ const repository = vi.hoisted(() => ({
 }));
 const next = vi.hoisted(() => ({ revalidatePath: vi.fn() }));
 
-vi.mock("@/lib/data/templates", () => repository);
+vi.mock("@/lib/data/templates", () => ({
+  ...repository,
+  TemplateConflictError: class TemplateConflictError extends Error {
+    constructor() {
+      super("La plantilla cambió; vuelve a intentarlo");
+    }
+  },
+  TemplateNotFoundError: class TemplateNotFoundError extends Error {
+    constructor() {
+      super("Plantilla no encontrada");
+    }
+  },
+  TemplateVersionNotFoundError: class TemplateVersionNotFoundError extends Error {
+    constructor(version: number) {
+      super(`No existe la versión ${version}`);
+    }
+  },
+}));
 vi.mock("next/cache", () => ({ revalidatePath: next.revalidatePath }));
 
 import { restoreTemplateAction, saveTemplateAction } from "./templates";
+import { TemplateConflictError } from "@/lib/data/templates";
 
 const id = "507f1f77bcf86cd799439011";
 const formData = (values: Record<string, string>) => {
@@ -41,6 +59,15 @@ describe("saveTemplateAction", () => {
     expect(result).toEqual({ ok: true, data: saved });
     expect(next.revalidatePath).toHaveBeenCalledWith(`/templates/${id}`);
   });
+
+  test("limita el contenido a 200000 caracteres", async () => {
+    const result = await saveTemplateAction(
+      formData({ templateId: id, content: "x".repeat(200001) }),
+    );
+
+    expect(result).toMatchObject({ ok: false, fieldErrors: { content: expect.any(Array) } });
+    expect(repository.saveTemplateVersion).not.toHaveBeenCalled();
+  });
 });
 
 test("restoreTemplateAction rejects invalid ids and versions", async () => {
@@ -51,6 +78,14 @@ test("restoreTemplateAction rejects invalid ids and versions", async () => {
     fieldErrors: { templateId: expect.any(Array), version: expect.any(Array) },
   });
   expect(repository.restoreTemplateVersion).not.toHaveBeenCalled();
+});
+
+test("saveTemplateAction conserva un conflicto de dominio útil", async () => {
+  repository.saveTemplateVersion.mockRejectedValue(new TemplateConflictError());
+
+  const result = await saveTemplateAction(formData({ templateId: id, content: "Hola {{NAME}}" }));
+
+  expect(result).toEqual({ ok: false, message: "La plantilla cambió; vuelve a intentarlo" });
 });
 
 test("restoreTemplateAction rejects a boolean version", async () => {

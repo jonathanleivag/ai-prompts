@@ -15,7 +15,7 @@ export async function generateCurrentPrompt(page: Page) {
     const input = variables.nth(index);
     await input.fill(`valor-e2e-${await input.getAttribute("name")}`);
   }
-  await page.getByRole("button", { name: "Generar prompt" }).click();
+  await page.getByRole("button", { name: "Generar y copiar" }).click();
   await expect(page.getByRole("heading", { name: "Snapshot del prompt" })).toBeVisible();
 }
 

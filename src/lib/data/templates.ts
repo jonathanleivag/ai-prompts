@@ -23,6 +23,27 @@ export interface RestoreTemplateVersionInput {
   version: number;
 }
 
+export class TemplateNotFoundError extends Error {
+  constructor() {
+    super("Plantilla no encontrada");
+    this.name = "TemplateNotFoundError";
+  }
+}
+
+export class TemplateVersionNotFoundError extends Error {
+  constructor(version: number) {
+    super(`No existe la versión ${version}`);
+    this.name = "TemplateVersionNotFoundError";
+  }
+}
+
+export class TemplateConflictError extends Error {
+  constructor() {
+    super("La plantilla cambió; vuelve a intentarlo");
+    this.name = "TemplateConflictError";
+  }
+}
+
 export function createTemplateRepository({ client, collections }: TemplateRepositoryDependencies) {
   return {
     async listTemplates() {
@@ -66,7 +87,7 @@ export function createTemplateRepository({ client, collections }: TemplateReposi
             { templateId, version: input.version },
             { session },
           );
-          if (!historical) throw new Error(`No existe la versión ${input.version}`);
+          if (!historical) throw new TemplateVersionNotFoundError(input.version);
           return appendVersion(templateId, historical.content, historical.variables, session);
         }),
       );
@@ -80,7 +101,7 @@ export function createTemplateRepository({ client, collections }: TemplateReposi
     session: ClientSession,
   ) {
     const template = await collections.templates.findOne({ _id: templateId }, { session });
-    if (!template) throw new Error("Plantilla no encontrada");
+    if (!template) throw new TemplateNotFoundError();
     const version = template.currentVersion + 1;
     const now = new Date();
     const update = await collections.templates.updateOne(
@@ -88,7 +109,7 @@ export function createTemplateRepository({ client, collections }: TemplateReposi
       { $set: { currentVersion: version, currentContent: content, variables, updatedAt: now } },
       { session },
     );
-    if (update.matchedCount === 0) throw new Error("La plantilla cambió; vuelve a intentarlo");
+    if (update.matchedCount === 0) throw new TemplateConflictError();
     await collections.templateVersions.insertOne(
       { _id: new ObjectId(), templateId, version, content, variables, createdAt: now },
       { session },

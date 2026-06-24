@@ -7,6 +7,7 @@ import type { AppCollections } from "@/lib/db/collections";
 import type { TemplateDocument } from "@/lib/db/models";
 
 import {
+  PromptRequiredError,
   WorkflowConflictError,
   generatePromptFromRun,
   createProjectRepository,
@@ -53,9 +54,10 @@ test("a stale transition fails inside a transaction with WorkflowConflictError",
       callback({ withTransaction }),
   );
   const updateOne = vi.fn().mockResolvedValue({ matchedCount: 0 });
+  const runUpdate = vi.fn().mockResolvedValue({ matchedCount: 1 });
   const repository = createProjectRepository({
     client: { withSession } as never,
-    collections: { projects: { updateOne } } as never,
+    collections: { projects: { updateOne }, stepRuns: { updateOne: runUpdate } } as never,
   });
 
   await expect(
@@ -72,6 +74,37 @@ test("a stale transition fails inside a transaction with WorkflowConflictError",
     expect.anything(),
     expect.anything(),
   );
+});
+
+test.each([
+  ["complete", (repository: ReturnType<typeof createProjectRepository>, projectId: string) => repository.completeStep({ projectId, currentStep: 4, cycle: 1 })],
+  ["approve", (repository: ReturnType<typeof createProjectRepository>, projectId: string) => repository.decideReview({ projectId, currentStep: 5, cycle: 1, decision: "approve" })],
+  ["request_changes", (repository: ReturnType<typeof createProjectRepository>, projectId: string) => repository.decideReview({ projectId, currentStep: 5, cycle: 1, decision: "request_changes" })],
+])("%s exige un prompt no vacío en el run activo dentro de la transacción", async (_, transition) => {
+  const withTransaction = vi.fn(async (callback: () => Promise<unknown>) => callback());
+  const withSession = vi.fn(async (callback: (session: { withTransaction: typeof withTransaction }) => Promise<unknown>) => callback({ withTransaction }));
+  const runUpdate = vi.fn().mockResolvedValue({ matchedCount: 0 });
+  const findRun = vi.fn().mockResolvedValue({ _id: new ObjectId(), status: "active", generatedPrompt: "" });
+  const projectUpdate = vi.fn().mockResolvedValue({ matchedCount: 1 });
+  const repository = createProjectRepository({
+    client: { withSession } as never,
+    collections: {
+      projects: { updateOne: projectUpdate },
+      stepRuns: { updateOne: runUpdate, findOne: findRun },
+    } as never,
+  });
+  const projectId = new ObjectId().toHexString();
+
+  await expect(transition(repository, projectId)).rejects.toBeInstanceOf(PromptRequiredError);
+  expect(runUpdate).toHaveBeenCalledWith(
+    expect.objectContaining({
+      projectId: new ObjectId(projectId),
+      generatedPrompt: expect.anything(),
+    }),
+    expect.anything(),
+    expect.anything(),
+  );
+  expect(projectUpdate).not.toHaveBeenCalled();
 });
 
 describeWithMongo("project repository (MongoDB transaction integration)", () => {
@@ -165,6 +198,12 @@ describeWithMongo("project repository (MongoDB transaction integration)", () => 
       name: "Review",
       description: "Review work",
       initialStep: 5,
+    });
+    await repository.generateStepPrompt({
+      projectId: project.id,
+      currentStep: 5,
+      cycle: 1,
+      variables: { VALUE: "feedback" },
     });
 
     const transition = await repository.decideReview({
