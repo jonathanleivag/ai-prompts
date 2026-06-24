@@ -145,6 +145,20 @@ h1 span { color: var(--violet); }
 .confirmation-backdrop { position: fixed; z-index: 20; inset: 0; display: grid; place-items: center; padding: 1.25rem; background: rgb(10 16 32 / 88%); }
 .confirmation { width: min(100%, 34rem); border: 1px solid var(--coral); border-radius: 10px; padding: 2rem; background: var(--slate); box-shadow: 0 20px 60px rgb(0 0 0 / 40%); }
 .confirmation h2 { margin-top: .8rem; }
+.search-input { width: 100%; max-width: 28rem; padding: .65rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--ink); color: var(--paper); font: .875rem var(--utility); outline: none; transition: border-color 160ms ease; }
+.search-input:focus { border-color: var(--violet); }
+.search-input::placeholder { color: var(--quiet); }
+.search-input--sm { max-width: 100%; font-size: .8rem; padding: .5rem .85rem; }
+.dashboard .search-input { margin-bottom: 1.5rem; }
+.pagination { display: flex; align-items: center; gap: 1rem; margin-top: 2rem; justify-content: center; }
+.pagination__btn { display: inline-flex; align-items: center; padding: .55rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--slate); color: var(--paper); font: 600 .8rem var(--utility); cursor: pointer; transition: border-color 160ms ease, background-color 160ms ease; text-decoration: none; }
+.pagination__btn:hover:not(:disabled) { border-color: var(--violet); background: var(--ink); }
+.pagination__btn:disabled, .pagination__btn--disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
+.pagination__info { font: .8rem var(--utility); color: var(--muted); }
+.run-history__controls { padding: .85rem 1.4rem; border-bottom: 1px solid var(--line); }
+.run-history__empty { padding: 1.2rem 1.4rem; color: var(--muted); font-size: .82rem; margin: 0; }
+.run-history__pagination { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.4rem; border-top: 1px solid var(--line); }
+
 .run-history { margin-top: 1.5rem; border: 1px solid var(--line); border-radius: 10px; background: var(--slate); overflow: hidden; }
 .run-history__toggle { list-style: none; cursor: pointer; padding: 1rem 1.4rem; font: 600 .75rem var(--utility); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); user-select: none; }
 .run-history__toggle::-webkit-details-marker { display: none; }

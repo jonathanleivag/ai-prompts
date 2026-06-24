@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition, useCallback, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import { completeStepAction, generatePromptAction, reviewDecisionAction } from "@/app/actions/projects";
@@ -49,45 +49,98 @@ const STATUS_LABELS: Record<string, string> = {
   skipped: "Omitida",
 };
 
-function RunHistory({ runs, currentStep, activeCycle }: { runs: WorkflowRunView[]; currentStep: Step; activeCycle: number }) {
-  const history = runs
-    .filter((r) => r.generatedPrompt && !(r.step === currentStep && r.cycle === activeCycle))
-    .sort((a, b) => a.cycle - b.cycle || a.step - b.step);
+const RUN_HISTORY_PAGE_SIZE = 5;
 
-  if (history.length === 0) return null;
+function RunHistory({ runs, currentStep, activeCycle }: { runs: WorkflowRunView[]; currentStep: Step; activeCycle: number }) {
+  const [q, setQ] = useState("");
+  const [page, setPage] = useState(1);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const all = useMemo(() =>
+    runs
+      .filter((r) => r.generatedPrompt && !(r.step === currentStep && r.cycle === activeCycle))
+      .sort((a, b) => a.cycle - b.cycle || a.step - b.step),
+    [runs, currentStep, activeCycle],
+  );
+
+  const filtered = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    if (!term) return all;
+    return all.filter((r) => {
+      const step = WORKFLOW_STEPS[r.step - 1];
+      return (
+        step?.shortName.toLowerCase().includes(term) ||
+        step?.name.toLowerCase().includes(term) ||
+        Object.entries(r.variables).some(([k, v]) =>
+          k.toLowerCase().includes(term) || v.toLowerCase().includes(term),
+        )
+      );
+    });
+  }, [all, q]);
+
+  const totalPages = Math.ceil(filtered.length / RUN_HISTORY_PAGE_SIZE);
+  const page_ = Math.min(page, totalPages || 1);
+  const paginated = filtered.slice((page_ - 1) * RUN_HISTORY_PAGE_SIZE, page_ * RUN_HISTORY_PAGE_SIZE);
+
+  const handleSearch = useCallback((value: string) => {
+    clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => { setQ(value); setPage(1); }, 250);
+  }, []);
+
+  if (all.length === 0) return null;
 
   return (
     <details className="run-history">
       <summary className="run-history__toggle">
-        Prompts anteriores ({history.length} {history.length === 1 ? "entrada" : "entradas"})
+        Prompts anteriores ({all.length} {all.length === 1 ? "entrada" : "entradas"})
       </summary>
-      <ol className="run-history__list">
-        {history.map((run) => (
-          <li key={run.id} className="run-history__item">
-            <div className="run-history__meta">
-              <span className="run-history__step">{WORKFLOW_STEPS[run.step - 1]?.shortName} · Etapa {String(run.step).padStart(2, "0")}</span>
-              <span className="run-history__cycle">Ciclo {String(run.cycle).padStart(2, "0")}</span>
-              <span className={`run-history__status run-history__status--${run.status}`}>
-                {STATUS_LABELS[run.status] ?? run.status}
-              </span>
-            </div>
-            {Object.keys(run.variables).length > 0 && (
-              <dl className="run-history__vars">
-                {Object.entries(run.variables).map(([k, v]) => (
-                  <div key={k} className="run-history__var">
-                    <dt>{k}</dt>
-                    <dd>{v}</dd>
-                  </div>
-                ))}
-              </dl>
-            )}
-            <details className="run-history__prompt-wrap">
-              <summary>Ver prompt</summary>
-              <pre className="run-history__prompt"><code>{run.generatedPrompt}</code></pre>
-            </details>
-          </li>
-        ))}
-      </ol>
+      <div className="run-history__controls">
+        <input
+          className="search-input search-input--sm"
+          type="search"
+          placeholder="Buscar por etapa o variable…"
+          aria-label="Buscar en el historial"
+          onChange={(e) => handleSearch(e.target.value)}
+        />
+      </div>
+      {paginated.length === 0 ? (
+        <p className="run-history__empty">Sin resultados para "{q}".</p>
+      ) : (
+        <ol className="run-history__list">
+          {paginated.map((run) => (
+            <li key={run.id} className="run-history__item">
+              <div className="run-history__meta">
+                <span className="run-history__step">{WORKFLOW_STEPS[run.step - 1]?.shortName} · Etapa {String(run.step).padStart(2, "0")}</span>
+                <span className="run-history__cycle">Ciclo {String(run.cycle).padStart(2, "0")}</span>
+                <span className={`run-history__status run-history__status--${run.status}`}>
+                  {STATUS_LABELS[run.status] ?? run.status}
+                </span>
+              </div>
+              {Object.keys(run.variables).length > 0 && (
+                <dl className="run-history__vars">
+                  {Object.entries(run.variables).map(([k, v]) => (
+                    <div key={k} className="run-history__var">
+                      <dt>{k}</dt>
+                      <dd>{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+              <details className="run-history__prompt-wrap">
+                <summary>Ver prompt</summary>
+                <pre className="run-history__prompt"><code>{run.generatedPrompt}</code></pre>
+              </details>
+            </li>
+          ))}
+        </ol>
+      )}
+      {totalPages > 1 && (
+        <div className="run-history__pagination">
+          <button className="pagination__btn" disabled={page_ <= 1} onClick={() => setPage((p) => p - 1)}>← Anterior</button>
+          <span className="pagination__info">{page_} / {totalPages}</span>
+          <button className="pagination__btn" disabled={page_ >= totalPages} onClick={() => setPage((p) => p + 1)}>Siguiente →</button>
+        </div>
+      )}
     </details>
   );
 }

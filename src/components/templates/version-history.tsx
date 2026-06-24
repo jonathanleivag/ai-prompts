@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export type TemplateVersionView = {
@@ -8,6 +11,8 @@ export type TemplateVersionView = {
   createdAt: string;
 };
 
+const VERSION_PAGE_SIZE = 5;
+
 export function VersionHistory({
   versions,
   disabled,
@@ -17,7 +22,10 @@ export function VersionHistory({
   disabled: boolean;
   onRestore: (version: TemplateVersionView, trigger: HTMLButtonElement) => void;
 }) {
+  const [page, setPage] = useState(1);
   const ordered = [...versions].sort((left, right) => right.version - left.version);
+  const totalPages = Math.ceil(ordered.length / VERSION_PAGE_SIZE);
+  const paginated = ordered.slice((page - 1) * VERSION_PAGE_SIZE, page * VERSION_PAGE_SIZE);
 
   return (
     <section className="template-history" aria-labelledby="history-title">
@@ -26,7 +34,7 @@ export function VersionHistory({
         <h2 id="history-title">Historial de versiones</h2>
       </div>
       <ol className="version-list" aria-label="Historial de versiones">
-        {ordered.map((entry) => (
+        {paginated.map((entry) => (
           <li className="version-entry" key={entry.id}>
             <div className="version-entry__heading">
               <div>
@@ -41,6 +49,13 @@ export function VersionHistory({
           </li>
         ))}
       </ol>
+      {totalPages > 1 && (
+        <div className="run-history__pagination">
+          <button className="pagination__btn" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>← Anterior</button>
+          <span className="pagination__info">{page} / {totalPages}</span>
+          <button className="pagination__btn" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Siguiente →</button>
+        </div>
+      )}
     </section>
   );
 }

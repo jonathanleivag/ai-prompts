@@ -1,11 +1,21 @@
 import Link from "next/link";
+import { Suspense } from "react";
+
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
+import { Pagination } from "@/components/ui/pagination";
+import { SearchInput } from "@/components/ui/search-input";
 import { ProjectCard } from "@/components/projects/project-card";
 import { listProjects } from "@/lib/data/projects";
 
-export default async function HomePage() {
-  const projects = await listProjects();
+const PAGE_SIZE = 6;
+
+export default async function HomePage({ searchParams }: { searchParams: Promise<Record<string, string>> }) {
+  const params = await searchParams;
+  const q = params.q ?? "";
+  const page = Math.max(1, Number(params.page) || 1);
+
+  const { items: projects, total } = await listProjects({ q, page, pageSize: PAGE_SIZE });
 
   return (
     <section className="dashboard">
@@ -17,14 +27,29 @@ export default async function HomePage() {
         action={<Link className="button-link" href="/projects/new">Nuevo proyecto</Link>}
       />
 
+      <Suspense>
+        <SearchInput defaultValue={q} placeholder="Buscar proyecto…" />
+      </Suspense>
+
       {projects.length === 0 ? (
         <EmptyState />
       ) : (
-        <ul className="project-grid">
-          {projects.map((project) => (
-            <li key={project.id}><ProjectCard project={project} /></li>
-          ))}
-        </ul>
+        <>
+          <ul className="project-grid">
+            {projects.map((project) => (
+              <li key={project.id}><ProjectCard project={project} /></li>
+            ))}
+          </ul>
+          <Suspense>
+            <Pagination
+              page={page}
+              total={total}
+              pageSize={PAGE_SIZE}
+              basePath="/"
+              searchParams={q ? { q } : {}}
+            />
+          </Suspense>
+        </>
       )}
     </section>
   );

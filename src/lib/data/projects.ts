@@ -86,10 +86,15 @@ export function createProjectRepository(dependencies: ProjectRepositoryDependenc
   const { client, collections } = dependencies;
 
   return {
-    async listProjects(): Promise<ProjectSummary[]> {
-      return (await collections.projects.find().sort({ updatedAt: -1 }).toArray()).map(
-        projectSummary,
-      );
+    async listProjects({ q, page, pageSize }: { q?: string; page?: number; pageSize?: number } = {}): Promise<{ items: ProjectSummary[]; total: number }> {
+      const filter = q?.trim() ? { name: { $regex: q.trim(), $options: "i" } } : {};
+      const size = pageSize ?? 6;
+      const skip = ((page ?? 1) - 1) * size;
+      const [items, total] = await Promise.all([
+        collections.projects.find(filter).sort({ updatedAt: -1 }).skip(skip).limit(size).toArray(),
+        collections.projects.countDocuments(filter),
+      ]);
+      return { items: items.map(projectSummary), total };
     },
 
     async getProjectDetail(id: string): Promise<ProjectDetail | null> {
@@ -305,8 +310,8 @@ async function runtimeRepository() {
   return createProjectRepository({ client, collections });
 }
 
-export async function listProjects() {
-  return (await runtimeRepository()).listProjects();
+export async function listProjects(params: { q?: string; page?: number; pageSize?: number } = {}) {
+  return (await runtimeRepository()).listProjects(params);
 }
 export async function getProjectDetail(id: string) {
   return (await runtimeRepository()).getProjectDetail(id);
