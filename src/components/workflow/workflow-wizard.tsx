@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { completeStepAction, generatePromptAction, reviewDecisionAction } from "@/app/actions/projects";
 import { WORKFLOW_STEPS } from "@/components/projects/workflow-steps";
 import { Button } from "@/components/ui/button";
+import { previewPrompt } from "@/lib/domain/template";
 import type { Step } from "@/lib/domain/types";
 import { PromptPreview } from "./prompt-preview";
 import { StepProgress } from "./step-progress";
@@ -45,6 +46,11 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
   const variables = templateVariables(activeRun?.templateSnapshot ?? "");
   const [values, setValues] = useState(activeRun?.variables ?? {});
   const [prompt, setPrompt] = useState(activeRun?.generatedPrompt);
+  const livePreview = useMemo(
+    () => previewPrompt(activeRun?.templateSnapshot ?? "", values),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activeRun?.templateSnapshot, values],
+  );
   const [message, setMessage] = useState<string>();
   const [copyError, setCopyError] = useState<string>();
   const [copied, setCopied] = useState(false);
@@ -150,7 +156,7 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
           </section>
           <div className="workflow-output">
             <p className="panel-index">02 / Salida persistente</p>
-            <PromptPreview prompt={prompt} copyError={copyError} copied={copied} onCopy={copy} />
+            <PromptPreview prompt={prompt} preview={Object.values(values).some((v) => v.trim()) ? livePreview || undefined : undefined} copyError={copyError} copied={copied} onCopy={copy} />
             <div className="workflow-actions">
               {isDecisionStep ? <><Button type="button" disabled={!prompt || pending} onClick={() => transition("approve")}>Aprobado</Button><Button type="button" variant="quiet" disabled={!prompt || pending} onClick={(event) => { changesTrigger.current = event.currentTarget; setDecisionError(undefined); setConfirmChanges(true); }}>Requiere cambios</Button></> : <Button type="button" disabled={!prompt || pending} onClick={() => transition()}>Completar etapa</Button>}
             </div>

@@ -179,4 +179,25 @@ describe("WorkflowWizard", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
   });
+
+  test("muestra vista previa en tiempo real al escribir una variable", () => {
+    render(<WorkflowWizard project={project} />);
+    fireEvent.change(screen.getByLabelText("FEATURE"), { target: { value: "offline" } });
+    expect(screen.getByRole("heading", { name: "Vista previa" })).toBeInTheDocument();
+    expect(screen.getByText(/offline para \[AUDIENCE\]/)).toBeInTheDocument();
+  });
+
+  test("oculta la vista previa cuando ambas variables están vacías al inicio", () => {
+    render(<WorkflowWizard project={project} />);
+    expect(screen.queryByRole("heading", { name: "Vista previa" })).not.toBeInTheDocument();
+    expect(screen.getByText("El snapshot generado aparecerá aquí.")).toBeInTheDocument();
+  });
+
+  test("cambia el título a 'Snapshot del prompt' después de generar", async () => {
+    render(<WorkflowWizard project={project} />);
+    fireEvent.change(screen.getByLabelText("FEATURE"), { target: { value: "offline" } });
+    fireEvent.change(screen.getByLabelText("AUDIENCE"), { target: { value: "equipos" } });
+    fireEvent.click(screen.getByRole("button", { name: "Generar y copiar" }));
+    expect(await screen.findByRole("heading", { name: "Snapshot del prompt" })).toBeInTheDocument();
+  });
 });
