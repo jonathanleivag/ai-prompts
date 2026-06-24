@@ -17,10 +17,10 @@ test("mantiene dos proyectos independientes en el dashboard", async ({ page }) =
   await expect(alpha).toContainText("Próximo prompt · ANA");
   await expect(beta).toContainText("Próximo prompt · IMP");
 
-  await alpha.getByRole("link", { name: "Proyecto Alfa" }).click();
+  await alpha.getByRole("link", { name: "Proyecto Alfa", exact: true }).click();
   await expect(page.getByText(/Etapa 02/)).toBeVisible();
   await page.getByRole("link", { name: "Proyectos", exact: true }).click();
-  await beta.getByRole("link", { name: "Proyecto Beta" }).click();
+  await beta.getByRole("link", { name: "Proyecto Beta", exact: true }).click();
   await expect(page.getByText(/Etapa 04/)).toBeVisible();
 });
 
@@ -75,6 +75,8 @@ test("permite recorrer el formulario de creación solo con teclado", async ({ pa
   await expect(page.getByRole("link", { name: "Proyectos", exact: true })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Plantillas", exact: true })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Volver a proyectos" })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.getByLabel("Nombre del proyecto")).toBeFocused();
   await page.keyboard.press("Tab");
