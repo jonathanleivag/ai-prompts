@@ -155,7 +155,7 @@ h1 span { color: var(--violet); }
 .search-input::placeholder { color: var(--quiet); }
 .search-input::-webkit-search-cancel-button { filter: invert(.5); cursor: pointer; }
 .search-input--sm { font-size: .8rem; padding: .55rem .85rem .55rem 2.2rem; }
-.dashboard .search-wrap { margin-bottom: 1.75rem; }
+.dashboard .search-wrap { margin-top: 20px; margin-bottom: 1.75rem; }
 .pagination { display: flex; align-items: center; gap: 1rem; margin-top: 2rem; justify-content: center; }
 .pagination__btn { display: inline-flex; align-items: center; padding: .55rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--slate); color: var(--paper); font: 600 .8rem var(--utility); cursor: pointer; transition: border-color 160ms ease, background-color 160ms ease; text-decoration: none; }
 .pagination__btn:hover:not(:disabled) { border-color: var(--violet); background: var(--ink); }
