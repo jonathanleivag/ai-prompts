@@ -116,6 +116,17 @@ export function createProjectRepository(dependencies: ProjectRepositoryDependenc
       };
     },
 
+    async deleteProject(id: string): Promise<void> {
+      const projectId = toObjectId(id);
+      await client.withSession((session) =>
+        session.withTransaction(async () => {
+          await collections.stepRuns.deleteMany({ projectId }, { session });
+          await collections.events.deleteMany({ projectId }, { session });
+          await collections.projects.deleteOne({ _id: projectId }, { session });
+        }),
+      );
+    },
+
     async createProject(input: CreateProjectInput): Promise<ProjectState> {
       return client.withSession((session) =>
         session.withTransaction(async () => {
@@ -311,6 +322,9 @@ export async function completeStep(input: ExpectedWorkflowState) {
 }
 export async function decideReview(input: DecideReviewInput) {
   return (await runtimeRepository()).decideReview(input);
+}
+export async function deleteProject(id: string) {
+  return (await runtimeRepository()).deleteProject(id);
 }
 
 export function generatePromptFromRun(

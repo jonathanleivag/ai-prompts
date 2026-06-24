@@ -10,6 +10,7 @@ import {
   completeStep,
   createProject,
   decideReview,
+  deleteProject,
   generateStepPrompt,
 } from "@/lib/data/projects";
 import { actionFailure, type ActionResult, validationFailure } from "@/lib/actions/state";
@@ -115,6 +116,18 @@ export async function reviewDecisionAction(input: ReviewDecisionInput): Promise<
   } catch (error) {
     return recoverableFailure(error);
   }
+}
+
+export async function deleteProjectAction(projectId: string): Promise<ActionResult<unknown>> {
+  const parsed = objectIdSchema.safeParse(projectId);
+  if (!parsed.success) return { ok: false, message: "ID de proyecto inválido" };
+  try {
+    await deleteProject(parsed.data);
+  } catch (error) {
+    return actionFailure(error);
+  }
+  revalidatePath("/projects");
+  redirect("/projects");
 }
 
 function recoverableFailure(error: unknown): ActionResult<never> {
