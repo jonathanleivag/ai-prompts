@@ -81,3 +81,30 @@ A continuación se describen las plantillas disponibles en este repositorio:
    * `{{INPUT_PATH}}` / `{{INPUT_PATH_1}}`: Rutas a los archivos fuente o de análisis anteriores.
    * `{{OUTPUT_PATH}}`: Ruta donde el agente debe guardar su reporte Markdown.
 3. **Pasa el prompt al asistente de IA** en tu entorno de desarrollo para ejecutar la tarea.
+
+---
+
+## Aplicación web
+
+Este repositorio también incluye una aplicación Next.js para ejecutar el flujo de ocho etapas como proyectos persistentes. Requiere Node.js 24 o una versión compatible con las dependencias declaradas en `package.json`, y una base MongoDB. No incorpora autenticación intencionalmente: debe desplegarse únicamente en un entorno de confianza o detrás del control de acceso de la plataforma.
+
+### Configuración local con MongoDB Atlas
+
+1. Crea un cluster y un usuario de base de datos en MongoDB Atlas, y permite la IP desde la que ejecutarás la aplicación.
+2. Copia `.env.example` como `.env.local`.
+3. Reemplaza `MONGODB_URI` por la cadena de conexión de Atlas y define en `MONGODB_DB` el nombre de la base de la aplicación.
+4. Instala las dependencias con `npm install` y carga las ocho plantillas con `npm run db:seed`.
+5. Inicia el entorno local con `npm run dev` y abre `http://localhost:3000`.
+
+La semilla conserva las plantillas ya editadas y garantiza que exista su versión inicial. Para empezar un proyecto, usa **Nuevo proyecto**, completa nombre y descripción y elige una etapa inicial. Empezar después de la etapa 1 registra las etapas anteriores como omitidas. En cada etapa completa las variables, genera el prompt y luego avanza; **Requiere cambios** desde review o testing crea un ciclo nuevo sin borrar el historial.
+
+La sección **Plantillas** permite editar el contenido fuente. Cada guardado crea una versión; restaurar una versión histórica copia su contenido a una versión nueva, por lo que el historial no se reescribe.
+
+### Verificación
+
+- `npm run test:run`: pruebas unitarias y de integración (estas últimas requieren `MONGODB_TEST_URI` cuando corresponda).
+- `npm run lint`: análisis estático.
+- `npm run build`: build de producción.
+- `npm run test:e2e`: recorrido real de la aplicación en Chromium.
+
+Las pruebas E2E nunca reutilizan `MONGODB_URI`. Exigen una variable `MONGODB_E2E_URI` con una cadena de conexión que incluya explícitamente una base aislada cuyo nombre contenga `e2e` o `test`, por ejemplo `mongodb://127.0.0.1:27017/ai_prompt_workflow_e2e`. Antes de cada suite se elimina exclusivamente esa base y se vuelven a cargar las plantillas. No apuntes esta variable a una base con datos que deban conservarse.
