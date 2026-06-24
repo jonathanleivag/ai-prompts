@@ -6,6 +6,7 @@ describe("workflow", () => {
   it("creates skipped runs before the selected active step", () => {
     expect(createInitialRuns(4).map(({ step, status }) => [step, status])).toEqual(
       [
+        [0, "skipped"],
         [1, "skipped"],
         [2, "skipped"],
         [3, "skipped"],

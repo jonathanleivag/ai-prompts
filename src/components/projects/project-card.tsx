@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { WORKFLOW_STEPS } from "./workflow-steps";
 
 export function ProjectCard({ project }: { project: ProjectSummary }) {
-  const current = WORKFLOW_STEPS[project.currentStep - 1];
+  const current = WORKFLOW_STEPS.find((s) => s.step === project.currentStep)!;
   const isCompleted = project.status === "completed";
   const formattedDate = new Intl.DateTimeFormat("es-CL", {
     day: "2-digit",

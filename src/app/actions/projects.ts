@@ -24,8 +24,9 @@ async function requireUserId(): Promise<string> {
   return userId;
 }
 
-const stepSchema = strictInteger("La etapa debe estar entre 1 y 8").pipe(
+const stepSchema = strictInteger("La etapa debe estar entre 0 y 8").pipe(
   z.union([
+    z.literal(0),
     z.literal(1),
     z.literal(2),
     z.literal(3),
@@ -34,7 +35,7 @@ const stepSchema = strictInteger("La etapa debe estar entre 1 y 8").pipe(
     z.literal(6),
     z.literal(7),
     z.literal(8),
-  ], { message: "La etapa debe estar entre 1 y 8" }),
+  ], { message: "La etapa debe estar entre 0 y 8" }),
 );
 const objectIdSchema = z.string().regex(/^[a-f\d]{24}$/i, "ID inválido");
 const workflowStateSchema = z.object({

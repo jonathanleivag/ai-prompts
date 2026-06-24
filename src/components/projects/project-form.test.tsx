@@ -13,11 +13,11 @@ describe("ProjectForm", () => {
     expect(screen.getByLabelText("Etapa inicial")).toHaveValue("1");
   });
 
-  test("ofrece las ocho etapas reales del workflow", () => {
+  test("ofrece las nueve etapas reales del workflow", () => {
     render(<ProjectForm createAction={vi.fn()} />);
 
-    expect(screen.getAllByRole("option")).toHaveLength(8);
-    expect(screen.getByRole("option", { name: /1 · Requerimiento/ })).toBeInTheDocument();
+    expect(screen.getAllByRole("option")).toHaveLength(9);
+    expect(screen.getByRole("option", { name: /0 · Contexto de Workspace/ })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: /8 · Checklist de producción/ })).toBeInTheDocument();
   });
 

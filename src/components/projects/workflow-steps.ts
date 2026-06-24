@@ -1,6 +1,7 @@
 import type { Step } from "@/lib/domain/types";
 
 export const WORKFLOW_STEPS: ReadonlyArray<{ step: Step; name: string; shortName: string }> = [
+  { step: 0, name: "Contexto de Workspace", shortName: "MEM" },
   { step: 1, name: "Requerimiento", shortName: "REQ" },
   { step: 2, name: "Análisis técnico", shortName: "ANA" },
   { step: 3, name: "Diseño UX/UI", shortName: "UX" },

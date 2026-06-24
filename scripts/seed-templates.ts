@@ -12,7 +12,7 @@ import type {
   TemplateVersionDocument,
 } from "../src/lib/db/models";
 
-const TEMPLATE_FILENAME = /^(0[1-8])-[^/]+\.md$/;
+const TEMPLATE_FILENAME = /^(0[0-8])-[^/]+\.md$/;
 
 export interface SeedTemplate {
   step: Step;
@@ -94,9 +94,9 @@ export async function readSeedTemplates(rootDir: string): Promise<SeedTemplate[]
 
 export async function seedTemplates(rootDir: string): Promise<void> {
   const seedTemplates = await readSeedTemplates(rootDir);
-  if (seedTemplates.length !== 8) {
+  if (seedTemplates.length !== 9) {
     throw new Error(
-      `Se esperaban 8 plantillas y se encontraron ${seedTemplates.length}`,
+      `Se esperaban 9 plantillas y se encontraron ${seedTemplates.length}`,
     );
   }
 

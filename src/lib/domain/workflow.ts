@@ -6,10 +6,11 @@ import type {
   WorkflowTransition,
 } from "./types";
 
-const STEPS: readonly Step[] = [1, 2, 3, 4, 5, 6, 7, 8];
+const STEPS: readonly Step[] = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
 export function createInitialRuns(initialStep: Step): NewStepRun[] {
-  return STEPS.slice(0, initialStep).map((step) => ({
+  const endIndex = STEPS.indexOf(initialStep) + 1;
+  return STEPS.slice(0, endIndex).map((step) => ({
     step,
     status: step === initialStep ? "active" : "skipped",
   }));
@@ -42,6 +43,7 @@ export function transitionWorkflow(
         return { ...state, projectStatus: "completed" };
       }
       return activeTransition(nextStep(state.step), state.cycle);
+
   }
 }
 
@@ -51,6 +53,8 @@ function activeTransition(step: Step, cycle: number): WorkflowTransition {
 
 function nextStep(step: Exclude<Step, 5 | 6 | 8>): Step {
   switch (step) {
+    case 0:
+      return 1;
     case 1:
       return 2;
     case 2:

@@ -42,12 +42,13 @@ async function createFixture(
 }
 
 describe("readSeedTemplates", () => {
-  it("reads the eight repository templates ordered by step", async () => {
+  it("reads the nine repository templates ordered by step", async () => {
     const templates = await readSeedTemplates(path.resolve(__dirname, ".."));
 
-    expect(templates).toHaveLength(8);
-    expect(templates.map(({ step }) => step)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(templates).toHaveLength(9);
+    expect(templates.map(({ step }) => step)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
     expect(templates.map(({ filename }) => filename)).toEqual([
+      "00-memory-codex.md",
       "01-requirement-codex.md",
       "02-analysis-claude.md",
       "03-ui-antigravity.md",
@@ -58,7 +59,7 @@ describe("readSeedTemplates", () => {
       "08-production-checklist.md",
     ]);
     expect(templates.every(({ content }) => content.length > 0)).toBe(true);
-    expect(templates[0].variables).toEqual(["FEATURE", "OUTPUT_PATH"]);
+    expect(templates[0].variables).toEqual(["WORKSPACE"]);
   });
 
   it("orders a fixture and extracts variables from its contents", async () => {

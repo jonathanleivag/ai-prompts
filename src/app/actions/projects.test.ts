@@ -53,7 +53,7 @@ describe("createProjectAction", () => {
     expect(repository.createProject).not.toHaveBeenCalled();
   });
 
-  test("rejects a step outside 1-8", async () => {
+  test("rejects a step outside 0-8", async () => {
     const result = await createProjectAction(
       formData({ name: "Proyecto", description: "desc", initialStep: "9" }),
     );
