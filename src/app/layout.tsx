@@ -8,6 +8,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "AI Prompt Workflow",
   description: "Gestiona proyectos y plantillas de prompts.",
+  icons: {
+    icon: [{ url: "/favicons/favicon-16x16.png", sizes: "16x16", type: "image/png" }],
+  },
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
@@ -20,7 +23,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <header className="site-header">
           <nav aria-label="Navegación principal" className="site-nav">
             <Link className="brand" href="/">
-              <span className="brand__mark" aria-hidden="true">AP</span>
+              <Image src="/logo.webp" alt="Prompt Pipeline" width={32} height={32} className="brand__logo" unoptimized />
               <span>Prompt Pipeline</span>
             </Link>
             <div className="nav-links">

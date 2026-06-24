@@ -37,6 +37,7 @@ button, select { cursor: pointer; }
 .site-nav { display: flex; align-items: center; justify-content: space-between; min-height: 4.5rem; }
 .brand { display: inline-flex; align-items: center; gap: .75rem; font-family: var(--display); font-size: 1.05rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
 .brand__mark { display: grid; place-items: center; width: 2rem; height: 2rem; border: 1px solid var(--violet); border-radius: 6px; color: var(--violet-text); font: 700 .75rem var(--utility); }
+.brand__logo { border-radius: 6px; object-fit: contain; }
 .nav-links { display: flex; align-items: center; gap: 1.5rem; color: var(--muted); font-size: .86rem; }
 .nav-links a:hover { color: var(--paper); }
 .nav-status { display: inline-flex; align-items: center; gap: .5rem; padding-left: 1.5rem; border-left: 1px solid var(--line); font: .65rem var(--utility); letter-spacing: .06em; text-transform: uppercase; }
