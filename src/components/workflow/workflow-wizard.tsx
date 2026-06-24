@@ -49,6 +49,7 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
   const [copyError, setCopyError] = useState<string>();
   const [copied, setCopied] = useState(false);
   const [confirmChanges, setConfirmChanges] = useState(false);
+  const [decisionError, setDecisionError] = useState<string>();
   const [pending, startTransition] = useTransition();
   const step = WORKFLOW_STEPS[project.currentStep - 1];
   const isDecisionStep = project.currentStep === 5 || project.currentStep === 6;
@@ -81,15 +82,20 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
     startTransition(async () => {
       const state = { projectId: project.id, currentStep: project.currentStep, cycle: project.cycle };
       const result = decision ? await reviewDecisionAction({ ...state, decision }) : await completeStepAction(state);
-      if (!result.ok) return setMessage(result.message);
+      if (!result.ok) {
+        if (decision === "request_changes") setDecisionError(result.message);
+        else setMessage(result.message);
+        return;
+      }
       setConfirmChanges(false);
+      setDecisionError(undefined);
       router.refresh();
     });
   }
 
   return (
     <div className="workflow-workbench">
-      <StepProgress currentStep={project.currentStep} runs={project.runs} />
+      <StepProgress currentStep={project.currentStep} runs={project.runs} projectStatus={project.status} />
       <header className="workflow-heading">
         <div><p className="eyebrow">Ciclo {String(project.cycle).padStart(2, "0")} / Etapa {String(project.currentStep).padStart(2, "0")}</p><h1>{project.name}</h1></div>
         <div><p className="workflow-heading__code">{step.shortName}</p><h2>{step.name}</h2><p>{project.description || "Completa la etapa activa y conserva cada snapshot como evidencia del flujo."}</p></div>
@@ -107,12 +113,12 @@ function WorkflowWorkbench({ project, activeRun }: { project: WorkflowProjectVie
             <p className="panel-index">02 / Salida persistente</p>
             <PromptPreview prompt={prompt} copyError={copyError} copied={copied} onCopy={copy} />
             <div className="workflow-actions">
-              {isDecisionStep ? <><Button type="button" disabled={!prompt || pending} onClick={() => transition("approve")}>Aprobado</Button><Button type="button" variant="quiet" disabled={!prompt || pending} onClick={() => setConfirmChanges(true)}>Requiere cambios</Button></> : <Button type="button" disabled={!prompt || pending} onClick={() => transition()}>Completar etapa</Button>}
+              {isDecisionStep ? <><Button type="button" disabled={!prompt || pending} onClick={() => transition("approve")}>Aprobado</Button><Button type="button" variant="quiet" disabled={!prompt || pending} onClick={() => { setDecisionError(undefined); setConfirmChanges(true); }}>Requiere cambios</Button></> : <Button type="button" disabled={!prompt || pending} onClick={() => transition()}>Completar etapa</Button>}
             </div>
           </div>
         </div>
       )}
-      {confirmChanges ? <div className="confirmation-backdrop" onKeyDown={(event) => { if (event.key === "Escape" && !pending) setConfirmChanges(false); }}><section className="confirmation" role="dialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-description"><p className="panel-index">Confirmación requerida</p><h2 id="confirm-title">Iniciar un ciclo nuevo</h2><p id="confirm-description">Esta decisión vuelve a Requerimiento y conserva el historial del ciclo actual.</p><div className="form-actions"><Button type="button" autoFocus onClick={() => transition("request_changes")} disabled={pending}>Confirmar cambios</Button><Button type="button" variant="quiet" onClick={() => setConfirmChanges(false)} disabled={pending}>Cancelar</Button></div></section></div> : null}
+      {confirmChanges ? <div className="confirmation-backdrop" onKeyDown={(event) => { if (event.key === "Escape" && !pending) { setConfirmChanges(false); setDecisionError(undefined); } }}><section className="confirmation" role="dialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-description"><p className="panel-index">Confirmación requerida</p><h2 id="confirm-title">Iniciar un ciclo nuevo</h2><p id="confirm-description">Esta decisión vuelve a Requerimiento y conserva el historial del ciclo actual.</p>{decisionError ? <p className="form-alert" role="alert" aria-live="assertive">{decisionError}</p> : null}<div className="form-actions"><Button type="button" autoFocus onClick={() => transition("request_changes")} disabled={pending}>Confirmar cambios</Button><Button type="button" variant="quiet" onClick={() => { setConfirmChanges(false); setDecisionError(undefined); }} disabled={pending}>Cancelar</Button></div></section></div> : null}
     </div>
   );
 }

@@ -51,6 +51,15 @@ describe("WorkflowWizard", () => {
     expect(within(progress).getByText(/Implementación · Actual/)).toBeInTheDocument();
   });
 
+  test("marca las ocho etapas completadas y ninguna actual cuando el proyecto terminó", () => {
+    render(<WorkflowWizard project={{ ...project, status: "completed", currentStep: 8 }} />);
+    const progress = screen.getByRole("list", { name: "Ruta del workflow" });
+
+    expect(within(progress).getAllByText(/· Completada$/)).toHaveLength(8);
+    expect(within(progress).queryByText(/· Actual$/)).not.toBeInTheDocument();
+    expect(within(progress).queryByRole("listitem", { current: "step" })).not.toBeInTheDocument();
+  });
+
   test("deriva los campos de variables de la plantilla activa", () => {
     render(<WorkflowWizard project={project} />);
     expect(screen.getByLabelText("FEATURE")).toBeInTheDocument();
@@ -76,7 +85,13 @@ describe("WorkflowWizard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Copiar prompt" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo copiar; inténtalo nuevamente");
     expect(screen.getByText("Persistente")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Copiar prompt" })).toBeEnabled();
+    const copyButton = screen.getByRole("button", { name: "Copiar prompt" });
+    expect(copyButton).toBeEnabled();
+
+    fireEvent.click(copyButton);
+    expect(await screen.findByRole("status")).toHaveTextContent("Copiado al portapapeles.");
+    expect(screen.queryByText("No se pudo copiar; inténtalo nuevamente")).not.toBeInTheDocument();
+    expect(navigator.clipboard.writeText).toHaveBeenCalledTimes(2);
   });
 
   test("no permite completar hasta que exista un prompt", () => {
@@ -97,5 +112,20 @@ describe("WorkflowWizard", () => {
     expect(screen.getByRole("dialog", { name: "Iniciar un ciclo nuevo" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Confirmar cambios" }));
     await waitFor(() => expect(actions.decide).toHaveBeenCalledWith(expect.objectContaining({ decision: "request_changes" })));
+  });
+
+  test("mantiene el modal operativo y anuncia dentro el fallo al solicitar cambios", async () => {
+    actions.decide.mockResolvedValueOnce({ ok: false, message: "No fue posible iniciar el ciclo" });
+    const reviewProject = { ...project, currentStep: 5, runs: [{ ...project.runs[2], step: 5, generatedPrompt: "Evaluar" }] } as WorkflowProjectView;
+    render(<WorkflowWizard project={reviewProject} />);
+    fireEvent.click(screen.getByRole("button", { name: "Requiere cambios" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar cambios" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "Iniciar un ciclo nuevo" });
+    expect(within(dialog).getByRole("alert")).toHaveTextContent("No fue posible iniciar el ciclo");
+    expect(within(dialog).getByRole("alert")).toHaveAttribute("aria-live", "assertive");
+    await waitFor(() => expect(within(dialog).getByRole("button", { name: "Confirmar cambios" })).toBeEnabled());
+    expect(within(dialog).getByRole("button", { name: "Cancelar" })).toBeEnabled();
+    expect(dialog).toContainElement(document.activeElement as HTMLElement);
   });
 });
