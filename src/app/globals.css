@@ -41,6 +41,19 @@ button, select { cursor: pointer; }
 .nav-links a:hover { color: var(--paper); }
 .nav-status { display: inline-flex; align-items: center; gap: .5rem; padding-left: 1.5rem; border-left: 1px solid var(--line); font: .65rem var(--utility); letter-spacing: .06em; text-transform: uppercase; }
 .nav-status i { width: .44rem; height: .44rem; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 0 3px rgb(74 215 209 / 12%); }
+.nav-user { display: inline-flex; align-items: center; gap: .75rem; padding-left: 1.5rem; border-left: 1px solid var(--line); }
+.nav-user__avatar { border-radius: 50%; border: 1px solid var(--line); }
+.nav-user__signout { background: none; border: none; color: var(--muted); font: .8rem var(--utility); cursor: pointer; transition: color 160ms ease; padding: 0; }
+.nav-user__signout:hover { color: var(--coral); }
+
+.login-page { display: grid; place-items: center; min-height: calc(100vh - 4.5rem); padding: 2rem; }
+.login-card { width: min(100%, 22rem); border: 1px solid var(--line); border-radius: 14px; padding: 2.5rem; background: var(--slate); display: grid; gap: 1.5rem; }
+.login-card__brand { display: flex; align-items: center; gap: .75rem; }
+.login-card__title { font: 700 1rem var(--utility); color: var(--paper); }
+.login-card__description { margin: 0; color: var(--muted); font-size: .875rem; line-height: 1.6; }
+.login-github-btn { display: flex; align-items: center; justify-content: center; gap: .65rem; width: 100%; padding: .8rem 1.2rem; border: 1px solid var(--line); border-radius: 8px; background: var(--ink); color: var(--paper); font: 600 .875rem var(--utility); cursor: pointer; transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease; }
+.login-github-btn:hover { border-color: var(--violet); background: var(--slate); transform: translateY(-1px); }
+.login-github-btn svg { width: 1.1rem; height: 1.1rem; flex-shrink: 0; }
 .page-shell { padding-block: clamp(3rem, 7vw, 6rem); }
 
 .page-header { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(16rem, .55fr); align-items: end; gap: clamp(2rem, 8vw, 7rem); padding-bottom: clamp(2.5rem, 6vw, 4.75rem); border-bottom: 1px solid var(--line); }

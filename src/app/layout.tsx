@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import type { ReactNode } from "react";
+import { auth, signOut } from "@/auth";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -8,7 +10,10 @@ export const metadata: Metadata = {
   description: "Gestiona proyectos y plantillas de prompts.",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+  const session = await auth();
+  const user = session?.user;
+
   return (
     <html lang="es">
       <body>
@@ -22,6 +27,16 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
               <Link href="/">Proyectos</Link>
               <Link href="/templates">Plantillas</Link>
               <span className="nav-status"><i aria-hidden="true" /> Sistema listo</span>
+              {user ? (
+                <div className="nav-user">
+                  {user.image ? (
+                    <Image className="nav-user__avatar" src={user.image} alt={user.name ?? "Usuario"} width={28} height={28} />
+                  ) : null}
+                  <form action={async () => { "use server"; await signOut({ redirectTo: "/login" }); }}>
+                    <button className="nav-user__signout" type="submit">Salir</button>
+                  </form>
+                </div>
+              ) : null}
             </div>
           </nav>
         </header>
