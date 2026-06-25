@@ -14,6 +14,8 @@ Detalle
 
 Validar funcionalmente la implementación.
 
+{{OBJETIVO}}
+
 ## Ejecutar
 
 ### Happy Path

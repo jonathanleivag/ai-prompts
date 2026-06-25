@@ -14,7 +14,7 @@ export function VariableForm({ variables, values, disabled, onChange }: {
             ? <textarea readOnly name={variable} value={values[variable] ?? ""} onChange={() => {}} rows={6} />
             : variable === "WORKSPACE"
             ? <input readOnly name={variable} value={values[variable] ?? ""} onChange={() => {}} />
-            : variable === "FEATURE"
+            : variable === "FEATURE" || variable === "OBJETIVO"
             ? <textarea disabled={disabled} name={variable} value={values[variable] ?? ""} onChange={(event) => onChange(variable, event.target.value)} rows={4} />
             : <input disabled={disabled} name={variable} value={values[variable] ?? ""} onChange={(event) => onChange(variable, event.target.value)} autoComplete="off" placeholder={variable === "OUTPUT_PATH" ? "/Users/nombre/Development/proyecto" : undefined} />}
         </label>
