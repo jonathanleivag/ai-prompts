@@ -94,9 +94,9 @@ export async function readSeedTemplates(rootDir: string): Promise<SeedTemplate[]
 
 export async function seedTemplates(rootDir: string): Promise<void> {
   const seedTemplates = await readSeedTemplates(rootDir);
-  if (seedTemplates.length !== 9) {
+  if (seedTemplates.length !== 13) {
     throw new Error(
-      `Se esperaban 9 plantillas y se encontraron ${seedTemplates.length}`,
+      `Se esperaban 13 plantillas y se encontraron ${seedTemplates.length}`,
     );
   }
 
