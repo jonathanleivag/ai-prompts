@@ -26,7 +26,7 @@ const contentSchema = z.string().trim().min(1, "El contenido es obligatorio").ma
     });
   }
 });
-const stepSchema = z.coerce.number().int().min(0).max(8);
+const stepSchema = z.coerce.number().int().min(0).max(12);
 const saveTemplateSchema = z.object({ templateId: objectIdSchema, content: contentSchema, step: stepSchema.optional() });
 const restoreTemplateSchema = z.object({
   templateId: objectIdSchema,
@@ -66,6 +66,10 @@ export async function saveTemplateAction(formData: FormData): Promise<ActionResu
     5: ["{{OUTPUT_PATH}}"],
     6: ["{{DETALLE}}", "{{OBJETIVO}}"],
     7: ["{{RELEASE_NAME}}", "{{OUTPUT_PATH}}"],
+    9: ["{{FEATURE}}", "{{OUTPUT_PATH}}"],
+    10: ["{{FEATURE}}", "{{OUTPUT_PATH}}"],
+    11: ["{{FEATURE}}", "{{OUTPUT_PATH}}"],
+    12: ["{{OUTPUT_PATH}}"],
   };
   const required = parsed.data.step !== undefined ? REQUIRED[parsed.data.step] : undefined;
   if (required) {

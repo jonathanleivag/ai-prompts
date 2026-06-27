@@ -10,4 +10,8 @@ export const WORKFLOW_STEPS: ReadonlyArray<{ step: Step; name: string; shortName
   { step: 6, name: "Testing funcional", shortName: "TST", recommendedAgent: "Antigravity" },
   { step: 7, name: "Release notes", shortName: "REL", recommendedAgent: "Claude" },
   { step: 8, name: "Checklist de producción", shortName: "PRD", recommendedAgent: "Claude" },
+  { step: 9, name: "Documentación funcional", shortName: "DOC", recommendedAgent: "Codex" },
+  { step: 10, name: "Documentación técnica", shortName: "TEC", recommendedAgent: "Claude" },
+  { step: 11, name: "Documentación UX/QA", shortName: "UXD", recommendedAgent: "Antigravity" },
+  { step: 12, name: "Consolidación de docs", shortName: "CON", recommendedAgent: "Antigravity" },
 ];

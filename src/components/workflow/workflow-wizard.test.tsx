@@ -42,17 +42,17 @@ beforeEach(() => {
 });
 
 describe("WorkflowWizard", () => {
-  test("muestra nueve etapas y distingue omitida, completada y actual", () => {
+  test("muestra trece etapas y distingue omitida, completada y actual", () => {
     render(<WorkflowWizard project={project} />);
     const progress = screen.getByRole("list", { name: "Ruta del workflow" });
-    expect(within(progress).getAllByRole("listitem")).toHaveLength(9);
+    expect(within(progress).getAllByRole("listitem")).toHaveLength(13);
     expect(within(progress).getByText(/Requerimiento · Omitida/)).toBeInTheDocument();
     expect(within(progress).getByText(/Análisis técnico · Completada/)).toBeInTheDocument();
     expect(within(progress).getByText(/Implementación · Actual/)).toBeInTheDocument();
   });
 
   test("preserva etapas omitidas y marca las ejecutadas completadas cuando el proyecto terminó", () => {
-    const completedRuns = Array.from({ length: 9 }, (_, index) => ({
+    const completedRuns = Array.from({ length: 13 }, (_, index) => ({
       id: String(index),
       step: index as WorkflowProjectView["currentStep"],
       cycle: 2,
@@ -60,11 +60,11 @@ describe("WorkflowWizard", () => {
       templateSnapshot: "",
       variables: {},
     }));
-    render(<WorkflowWizard project={{ ...project, status: "completed", currentStep: 8, runs: completedRuns }} />);
+    render(<WorkflowWizard project={{ ...project, status: "completed", currentStep: 12, runs: completedRuns }} />);
     const progress = screen.getByRole("list", { name: "Ruta del workflow" });
 
     expect(within(progress).getAllByText(/· Omitida$/)).toHaveLength(3);
-    expect(within(progress).getAllByText(/· Completada$/)).toHaveLength(6);
+    expect(within(progress).getAllByText(/· Completada$/)).toHaveLength(10);
     expect(within(progress).queryByText(/· Actual$/)).not.toBeInTheDocument();
     expect(within(progress).queryByRole("listitem", { current: "step" })).not.toBeInTheDocument();
   });

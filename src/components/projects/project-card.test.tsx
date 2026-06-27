@@ -15,14 +15,14 @@ const baseProject: ProjectSummary = {
 };
 
 describe("ProjectCard", () => {
-  test("presenta el próximo prompt y los nueve pulsos de un proyecto activo", () => {
+  test("presenta el próximo prompt y los trece pulsos de un proyecto activo", () => {
     render(<ProjectCard project={baseProject} />);
 
     expect(screen.getByText("Próximo prompt · IMP")).toBeInTheDocument();
     expect(screen.getByText("Ciclo 03")).toBeInTheDocument();
     expect(screen.getByText("En curso")).toBeInTheDocument();
-    expect(screen.getByRole("list", { name: "Progreso: etapa 4 de 8" })).toBeInTheDocument();
-    expect(screen.getAllByRole("listitem")).toHaveLength(9);
+    expect(screen.getByRole("list", { name: "Progreso: etapa 4 de 12" })).toBeInTheDocument();
+    expect(screen.getAllByRole("listitem")).toHaveLength(13);
     expect(screen.getByText(/Actualizado 23 jun 2026/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Abrir proyecto Agente móvil" })).toHaveTextContent("Abrir flujo");
   });
@@ -55,14 +55,14 @@ describe("ProjectCard", () => {
   test("presenta el cierre sin sugerir un próximo prompt en un proyecto completado", () => {
     render(
       <ProjectCard
-        project={{ ...baseProject, currentStep: 8, cycle: 4, status: "completed" }}
+        project={{ ...baseProject, currentStep: 12, cycle: 4, status: "completed" }}
       />,
     );
 
-    expect(screen.getByText("Flujo completado · PRD")).toBeInTheDocument();
+    expect(screen.getByText("Flujo completado · CON")).toBeInTheDocument();
     expect(screen.getByText("Checklist finalizado")).toBeInTheDocument();
     expect(screen.queryByText(/Próximo prompt/)).not.toBeInTheDocument();
-    expect(screen.getAllByRole("listitem")).toHaveLength(9);
+    expect(screen.getAllByRole("listitem")).toHaveLength(13);
     expect(screen.getByRole("link", { name: "Abrir proyecto Agente móvil" })).toHaveTextContent("Ver historial");
     expect(screen.queryByText("Abrir flujo")).not.toBeInTheDocument();
   });

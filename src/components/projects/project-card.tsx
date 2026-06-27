@@ -32,7 +32,7 @@ export function ProjectCard({ project }: { project: ProjectSummary }) {
         </div>
         <span className="project-card__number" aria-hidden="true">{String(project.currentStep).padStart(2, "0")}</span>
       </div>
-      <ol className="pulse-route" aria-label={`Progreso: etapa ${project.currentStep} de 8`}>
+      <ol className="pulse-route" aria-label={`Progreso: etapa ${project.currentStep} de 12`}>
         {WORKFLOW_STEPS.map(({ step, name, shortName }) => {
           const state = !isCompleted && step === project.currentStep
             ? "active"

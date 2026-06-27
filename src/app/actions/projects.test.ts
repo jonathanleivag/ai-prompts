@@ -53,9 +53,9 @@ describe("createProjectAction", () => {
     expect(repository.createProject).not.toHaveBeenCalled();
   });
 
-  test("rejects a step outside 0-8", async () => {
+  test("rejects a step outside 0-12", async () => {
     const result = await createProjectAction(
-      formData({ name: "Proyecto", description: "desc", initialStep: "9" }),
+      formData({ name: "Proyecto", description: "desc", initialStep: "13" }),
     );
 
     expect(result).toMatchObject({ ok: false, fieldErrors: { initialStep: expect.any(Array) } });

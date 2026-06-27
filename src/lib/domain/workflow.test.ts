@@ -69,9 +69,9 @@ describe("workflow", () => {
     },
   );
 
-  it("completes the project when step 8 is completed", () => {
-    expect(transitionWorkflow({ step: 8, cycle: 2 }, "complete")).toEqual({
-      step: 8,
+  it("completes the project when step 12 is completed", () => {
+    expect(transitionWorkflow({ step: 12, cycle: 2 }, "complete")).toEqual({
+      step: 12,
       cycle: 2,
       projectStatus: "completed",
     });

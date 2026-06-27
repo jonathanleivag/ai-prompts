@@ -85,7 +85,7 @@ h1 span { color: var(--violet); }
 .project-card__completion { margin: .8rem 0 0; color: var(--cyan); font: .75rem var(--utility); letter-spacing: .04em; text-transform: uppercase; }
 .project-card__number { color: rgb(243 246 252 / 9%); font: 600 5rem/.8 var(--display); }
 .project-card { position: relative; }
-.pulse-route { display: grid; grid-template-columns: repeat(9, 1fr); gap: .35rem; margin: 0; padding: 0; list-style: none; }
+.pulse-route { display: grid; grid-template-columns: repeat(13, 1fr); gap: .35rem; margin: 0; padding: 0; list-style: none; }
 .pulse-route__bar { display: block; height: 5px; border-radius: 2px; background: #303a54; }
 .pulse-route__label { display: block; margin-top: .5rem; color: var(--quiet); font: .65rem var(--utility); letter-spacing: .01em; }
 .pulse-route__label b { color: inherit; font-weight: 400; }
@@ -130,7 +130,7 @@ h1 span { color: var(--violet); }
 .form-actions { display: flex; align-items: center; gap: 1rem; padding-top: .5rem; }
 .workflow-workbench { padding-bottom: 4rem; }
 .workflow-progress { margin-bottom: clamp(2.5rem, 6vw, 5rem); }
-.workflow-route { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: .3rem; margin: 0; padding: 0; list-style: none; }
+.workflow-route { display: grid; grid-template-columns: repeat(13, minmax(0, 1fr)); gap: .3rem; margin: 0; padding: 0; list-style: none; }
 .workflow-route__step { position: relative; min-width: 0; border-top: 5px solid #303a54; padding-top: .8rem; color: var(--quiet); }
 .workflow-route__pulse { position: absolute; top: -.58rem; left: 0; width: .72rem; height: .72rem; border: 2px solid var(--ink); border-radius: 50%; background: #303a54; }
 .workflow-route__index { display: block; font: .66rem var(--utility); }

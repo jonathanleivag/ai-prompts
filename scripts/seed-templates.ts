@@ -12,7 +12,7 @@ import type {
   TemplateVersionDocument,
 } from "../src/lib/db/models";
 
-const TEMPLATE_FILENAME = /^(0[0-8])-[^/]+\.md$/;
+const TEMPLATE_FILENAME = /^(0[0-9]|1[0-2])-[^/]+\.md$/;
 
 export interface SeedTemplate {
   step: Step;

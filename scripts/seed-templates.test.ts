@@ -42,11 +42,11 @@ async function createFixture(
 }
 
 describe("readSeedTemplates", () => {
-  it("reads the nine repository templates ordered by step", async () => {
+  it("reads the thirteen repository templates ordered by step", async () => {
     const templates = await readSeedTemplates(path.resolve(__dirname, ".."));
 
-    expect(templates).toHaveLength(9);
-    expect(templates.map(({ step }) => step)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(templates).toHaveLength(13);
+    expect(templates.map(({ step }) => step)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
     expect(templates.map(({ filename }) => filename)).toEqual([
       "00-memory-codex.md",
       "01-requirement-codex.md",
@@ -57,6 +57,10 @@ describe("readSeedTemplates", () => {
       "06-testing-antigravity.md",
       "07-release-notes.md",
       "08-production-checklist.md",
+      "09-documentation-codex.md",
+      "10-documentation-claude.md",
+      "11-documentation-antigravity.md",
+      "12-documentation-final-antigravity.md",
     ]);
     expect(templates.every(({ content }) => content.length > 0)).toBe(true);
     expect(templates[0].variables).toEqual(["WORKSPACE"]);
